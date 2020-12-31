@@ -1,6 +1,7 @@
 use num_bigint::{ BigInt };
 use std::collections::BTreeMap;
 
+#[derive(PartialEq)]
 pub enum BencodexValue {
     Binary(Vec<u8>),
     Text(String),
@@ -11,6 +12,7 @@ pub enum BencodexValue {
     Null(()),
 }
 
+#[derive(PartialEq)]
 pub enum BencodexKey {
     Binary(Vec<u8>),
     Text(String),
