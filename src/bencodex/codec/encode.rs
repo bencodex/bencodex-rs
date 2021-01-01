@@ -77,7 +77,7 @@ fn encode_key(key: &BencodexKey) -> Vec<u8> {
     };
 
     buf.extend(bytes.len().to_string().into_bytes());
-    buf.insert(buf.len() - 1, b':');
+    buf.push(b':');
     buf.extend(bytes);
     buf
 }
