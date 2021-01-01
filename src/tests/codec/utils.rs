@@ -7,6 +7,7 @@ use num_traits::cast::FromPrimitive;
 use std::fs;
 use std::fs::DirEntry;
 use std::collections::BTreeMap;
+use std::str::FromStr;
 use std::path::{ Path, PathBuf };
 use yaml_rust::{ Yaml };
 use yaml_rust::yaml::Hash;
@@ -32,7 +33,6 @@ struct TestsuiteYamlLoader {
 
 impl MarkedEventReceiver for TestsuiteYamlLoader {
     fn on_event(&mut self, ev: Event, _: Marker) {
-        println!("{:?}", ev);
         match ev {
             Event::DocumentStart => {
                 // do nothing
@@ -60,9 +60,7 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                 self.insert_new_node(node);
             }
             Event::Scalar(v, style, aid, tag) => {
-                let value = if style != TScalarStyle::Plain {
-                    BencodexValue::Text(v)
-                } else if let Some(TokenType::Tag(ref handle, ref suffix)) = tag {
+                let value = if let Some(TokenType::Tag(ref handle, ref suffix)) = tag {
                     // XXX tag:yaml.org,2002:
                     if handle == "!!" {
                         match suffix.as_ref() {
@@ -77,7 +75,7 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                                 Err(_) => unreachable!(),
                                 Ok(v) => BencodexValue::Number(BigInt::from_i64(v).unwrap()),
                             },
-                            "binary" => BencodexValue::Binary(base64::decode(v).unwrap()),
+                            "binary" => BencodexValue::Binary(base64::decode(v.replace('\n', "")).unwrap()),
                             "null" => match v.as_ref() {
                                 "~" | "null" => BencodexValue::Null(()),
                                 _ => unreachable!(),
@@ -89,7 +87,16 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                     }
                 } else {
                     // Datatype is not specified, or unrecognized
-                    BencodexValue::Text(v)
+                    if let Ok(i) = BigInt::from_str(&v) {
+                        BencodexValue::Number(i)
+                    } else if let Ok(b) = v.parse::<bool>() {
+                        BencodexValue::Boolean(b)
+                    } else if v == "null" {
+                        BencodexValue::Null(())
+                    }
+                    else {
+                        BencodexValue::Text(v)
+                    }
                 };
 
                 self.insert_new_node((value, aid));
@@ -115,11 +122,7 @@ impl TestsuiteYamlLoader {
                         self.key_stack.push(match node.0 {
                             BencodexValue::Binary(v) => Some(BencodexKey::Binary(v)),
                             BencodexValue::Text(v) => Some(BencodexKey::Text(v)),
-                            _ => {
-                                println!("{:?}", parent);
-                                println!("{:?}", node.0);
-                                unreachable!()
-                            },
+                            _ => unreachable!(),
                         });
                     // current node is a value
                     } else {
@@ -161,15 +164,12 @@ pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
             }).map(|entry: std::io::Result<DirEntry>| -> Spec {
                 if let Ok(file) = entry {
                     let mut path: PathBuf = file.path();
-                    println!("New Line ---------------------------------");
-                    println!("{:?}", path);
                     let encoded = match fs::read(path.to_owned()) {
                         Ok(v) => v,
                         Err(why) => panic!(why),
                     };
 
                     path.set_extension("yaml");
-                    println!("{:?}", path);
                     let content = match fs::read_to_string(path.to_owned()) {
                         Ok(s) => s,
                         Err(why) => panic!(why),
