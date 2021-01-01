@@ -16,12 +16,12 @@ fn encode_number() {
 #[test]
 fn spec_test() {
     let specs = utils::iter_spec().unwrap();
-    println!("{}", specs.len());
     for spec in specs {
         let mut buf: Vec<u8> = vec![];
-        println!("SPEC [{}]", spec.name);
-        println!("  BVALUE: {:?}", spec.bvalue);
+        println!("---- SPEC [{}] ----", spec.name);
+        println!("BVALUE: {:?}", spec.bvalue);
         spec.bvalue.encode(&mut buf);
         assert_eq!(buf, spec.encoded);
+        println!("---- PASSED ----");
     }
 }
