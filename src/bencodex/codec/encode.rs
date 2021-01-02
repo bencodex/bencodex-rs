@@ -1,11 +1,9 @@
 use super::types::*;
+use itertools::Itertools;
+use num_bigint::BigInt;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::io;
-
-use itertools::Itertools;
-
-use num_bigint::BigInt;
 
 pub trait Encodable {
     fn encode(self, writer: &mut io::Write);

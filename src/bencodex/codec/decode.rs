@@ -1,11 +1,10 @@
 use super::types::*;
+use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use std::result::Result;
 use std::str;
 use std::str::FromStr;
-
-use num_bigint::BigInt;
 
 #[derive(Debug)]
 pub enum DecodableErrorReason {
