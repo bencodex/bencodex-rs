@@ -6,11 +6,11 @@ use std::collections::BTreeMap;
 use std::io;
 use std::result::Result;
 
-pub trait Encodable {
+pub trait Encode {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error>;
 }
 
-impl Encodable for Vec<u8> {
+impl Encode for Vec<u8> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         match write!(writer, "{}:", self.len()) {
             Ok(()) => match writer.write(&self) {
@@ -22,13 +22,13 @@ impl Encodable for Vec<u8> {
     }
 }
 
-impl Encodable for i64 {
+impl Encode for i64 {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         write!(writer, "i{}e", self)
     }
 }
 
-impl Encodable for String {
+impl Encode for String {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let bytes = self.into_bytes();
         match write!(writer, "u{}:", bytes.len()) {
@@ -41,7 +41,7 @@ impl Encodable for String {
     }
 }
 
-impl Encodable for bool {
+impl Encode for bool {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         match writer.write(match self {
             true => &[b't'],
@@ -53,7 +53,7 @@ impl Encodable for bool {
     }
 }
 
-impl Encodable for BigInt {
+impl Encode for BigInt {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         if let Err(e) = writer.write(&[b'i']) {
             return Err(e);
@@ -71,7 +71,7 @@ impl Encodable for BigInt {
     }
 }
 
-impl Encodable for Vec<BencodexValue> {
+impl Encode for Vec<BencodexValue> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         if let Err(e) = writer.write(&[b'l']) {
             return Err(e);
@@ -91,7 +91,7 @@ impl Encodable for Vec<BencodexValue> {
     }
 }
 
-impl Encodable for () {
+impl Encode for () {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         match writer.write(&[b'n']) {
             Ok(_) => Ok(()),
@@ -117,7 +117,7 @@ fn encode_key(key: &BencodexKey) -> Vec<u8> {
     buf
 }
 
-impl Encodable for BencodexValue {
+impl Encode for BencodexValue {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         // FIXME: rewrite more beautiful.
         match match self {
@@ -147,7 +147,7 @@ fn compare_vector<T: Ord>(xs: &Vec<T>, ys: &Vec<T>) -> Ordering {
     xs.len().cmp(&ys.len())
 }
 
-impl Encodable for BTreeMap<BencodexKey, BencodexValue> {
+impl Encode for BTreeMap<BencodexKey, BencodexValue> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let pairs = self
             .into_iter()
