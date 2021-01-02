@@ -4,62 +4,99 @@ use num_bigint::BigInt;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::io;
+use std::result::Result;
 
 pub trait Encodable {
-    fn encode(self, writer: &mut dyn io::Write);
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error>;
 }
 
 impl Encodable for Vec<u8> {
-    fn encode(self, writer: &mut dyn io::Write) {
-        write!(writer, "{}:", self.len());
-        writer.write(&self);
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+        match write!(writer, "{}:", self.len()) {
+            Ok(()) => match writer.write(&self) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
     }
 }
 
 impl Encodable for i64 {
-    fn encode(self, writer: &mut dyn io::Write) {
-        write!(writer, "i{}e", self);
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+        write!(writer, "i{}e", self)
     }
 }
 
 impl Encodable for String {
-    fn encode(self, writer: &mut dyn io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let bytes = self.into_bytes();
-        write!(writer, "u{}:", bytes.len());
-        writer.write(&bytes);
+        match write!(writer, "u{}:", bytes.len()) {
+            Ok(()) => match writer.write(&bytes) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        }
     }
 }
 
 impl Encodable for bool {
-    fn encode(self, writer: &mut dyn io::Write) {
-        writer.write(match self {
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+        match writer.write(match self {
             true => &[b't'],
             false => &[b'f'],
-        });
+        }) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
+        }
     }
 }
 
 impl Encodable for BigInt {
-    fn encode(self, writer: &mut dyn io::Write) {
-        writer.write(&[b'i']);
-        writer.write(&self.to_str_radix(10).into_bytes());
-        writer.write(&[b'e']);
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+        if let Err(e) = writer.write(&[b'i']) {
+            return Err(e);
+        }
+
+        if let Err(e) = writer.write(&self.to_str_radix(10).into_bytes()) {
+            return Err(e);
+        }
+
+        if let Err(e) = writer.write(&[b'e']) {
+            return Err(e);
+        }
+
+        Ok(())
     }
 }
 
 impl Encodable for Vec<BencodexValue> {
-    fn encode(self, writer: &mut dyn io::Write) {
-        writer.write(&[b'l']);
-        for el in self {
-            el.encode(writer);
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+        if let Err(e) = writer.write(&[b'l']) {
+            return Err(e);
         }
-        writer.write(&[b'e']);
+
+        for el in self {
+            if let Err(e) = el.encode(writer) {
+                return Err(e);
+            }
+        }
+
+        if let Err(e) = writer.write(&[b'e']) {
+            return Err(e);
+        }
+
+        Ok(())
     }
 }
 
 impl Encodable for () {
-    fn encode(self, writer: &mut dyn io::Write) {
-        writer.write(&[b'n']);
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+        match writer.write(&[b'n']) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -81,8 +118,9 @@ fn encode_key(key: &BencodexKey) -> Vec<u8> {
 }
 
 impl Encodable for BencodexValue {
-    fn encode(self, writer: &mut dyn io::Write) {
-        match self {
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+        // FIXME: rewrite more beautiful.
+        match match self {
             BencodexValue::Binary(x) => x.encode(writer),
             BencodexValue::Text(x) => x.encode(writer),
             BencodexValue::Dictionary(x) => x.encode(writer),
@@ -90,7 +128,10 @@ impl Encodable for BencodexValue {
             BencodexValue::Boolean(x) => x.encode(writer),
             BencodexValue::Null(x) => x.encode(writer),
             BencodexValue::Number(x) => x.encode(writer),
-        };
+        } {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -107,7 +148,7 @@ fn compare_vector<T: Ord>(xs: &Vec<T>, ys: &Vec<T>) -> Ordering {
 }
 
 impl Encodable for BTreeMap<BencodexKey, BencodexValue> {
-    fn encode(self, writer: &mut dyn io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let pairs = self
             .into_iter()
             .map(|(key, value)| {
@@ -128,11 +169,24 @@ impl Encodable for BTreeMap<BencodexKey, BencodexValue> {
                 compare_vector(&x_key_bytes, &y_key_bytes)
             });
 
-        writer.write(&[b'd']);
-        for (_, key_bytes, value) in pairs {
-            writer.write(&key_bytes);
-            value.encode(writer);
+        if let Err(e) = writer.write(&[b'd']) {
+            return Err(e);
         }
-        writer.write(&[b'e']);
+
+        for (_, key_bytes, value) in pairs {
+            if let Err(e) = writer.write(&key_bytes) {
+                return Err(e);
+            }
+
+            if let Err(e) = value.encode(writer) {
+                return Err(e);
+            }
+        }
+
+        if let Err(e) = writer.write(&[b'e']) {
+            return Err(e);
+        }
+
+        Ok(())
     }
 }
