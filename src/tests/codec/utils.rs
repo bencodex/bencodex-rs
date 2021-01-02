@@ -1,16 +1,16 @@
-use yaml_rust::parser::Parser;
 use num_bigint::BigInt;
-use yaml_rust::parser::MarkedEventReceiver;
-use yaml_rust::Event;
-use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use num_traits::cast::FromPrimitive;
+use std::collections::BTreeMap;
 use std::fs;
 use std::fs::DirEntry;
-use std::collections::BTreeMap;
-use std::str::FromStr;
 use std::path::PathBuf;
+use std::str::FromStr;
+use yaml_rust::parser::MarkedEventReceiver;
+use yaml_rust::parser::Parser;
+use yaml_rust::scanner::{Marker, ScanError, TokenType};
+use yaml_rust::Event;
 
-use crate::bencodex::codec::types::{ BencodexKey, BencodexValue };
+use crate::bencodex::codec::types::{BencodexKey, BencodexValue};
 
 #[derive(PartialEq, Debug)]
 pub struct Spec {
@@ -35,12 +35,10 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
             Event::DocumentStart => {
                 // do nothing
             }
-            Event::DocumentEnd => {
-                match self.doc_stack.len() {
-                    1 => self.docs.push(self.doc_stack.pop().unwrap().0),
-                    _ => unreachable!(),
-                }
-            }
+            Event::DocumentEnd => match self.doc_stack.len() {
+                1 => self.docs.push(self.doc_stack.pop().unwrap().0),
+                _ => unreachable!(),
+            },
             Event::SequenceStart(aid) => {
                 self.doc_stack.push((BencodexValue::List(Vec::new()), aid));
             }
@@ -50,7 +48,8 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
             }
             Event::MappingStart(aid) => {
                 self.key_stack.push(None);
-                self.doc_stack.push((BencodexValue::Dictionary(BTreeMap::new()), aid));
+                self.doc_stack
+                    .push((BencodexValue::Dictionary(BTreeMap::new()), aid));
             }
             Event::MappingEnd => {
                 self.key_stack.pop().unwrap();
@@ -73,7 +72,9 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                                 Err(_) => unreachable!(),
                                 Ok(v) => BencodexValue::Number(BigInt::from_i64(v).unwrap()),
                             },
-                            "binary" => BencodexValue::Binary(base64::decode(v.replace('\n', "")).unwrap()),
+                            "binary" => {
+                                BencodexValue::Binary(base64::decode(v.replace('\n', "")).unwrap())
+                            }
                             "null" => match v.as_ref() {
                                 "~" | "null" => BencodexValue::Null(()),
                                 _ => unreachable!(),
@@ -91,8 +92,7 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                         BencodexValue::Boolean(b)
                     } else if v == "null" {
                         BencodexValue::Null(())
-                    }
-                    else {
+                    } else {
                         BencodexValue::Text(v)
                     }
                 };
@@ -128,7 +128,7 @@ impl TestsuiteYamlLoader {
                         self.key_stack.push(None);
                         h.insert(newkey, node.0);
                     }
-                },
+                }
                 _ => unreachable!(),
             }
         }
@@ -147,41 +147,49 @@ impl TestsuiteYamlLoader {
 }
 
 pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
-    let files = fs::read_dir(SPEC_PATH).unwrap()
-            .filter(|entry| {
-                if let Ok(file) = entry {
-                    println!("{:?}", file);
-                    if let Some(ext) = file.path().extension() {
-                        ext == "dat"
-                    } else {
-                        false
-                    }
+    let files = fs::read_dir(SPEC_PATH)
+        .unwrap()
+        .filter(|entry| {
+            if let Ok(file) = entry {
+                println!("{:?}", file);
+                if let Some(ext) = file.path().extension() {
+                    ext == "dat"
                 } else {
                     false
                 }
-            }).map(|entry: std::io::Result<DirEntry>| -> Spec {
-                if let Ok(file) = entry {
-                    let mut path: PathBuf = file.path();
-                    let encoded = match fs::read(path.to_owned()) {
-                        Ok(v) => v,
-                        Err(why) => panic!(why),
-                    };
+            } else {
+                false
+            }
+        })
+        .map(|entry: std::io::Result<DirEntry>| -> Spec {
+            if let Ok(file) = entry {
+                let mut path: PathBuf = file.path();
+                let encoded = match fs::read(path.to_owned()) {
+                    Ok(v) => v,
+                    Err(why) => panic!(why),
+                };
 
-                    path.set_extension("yaml");
-                    let content = match fs::read_to_string(path.to_owned()) {
-                        Ok(s) => s,
-                        Err(why) => panic!(why),
-                    };
-                    
-                    let bvalue: BencodexValue = match TestsuiteYamlLoader::load_from_str(&content.to_string()) {
+                path.set_extension("yaml");
+                let content = match fs::read_to_string(path.to_owned()) {
+                    Ok(s) => s,
+                    Err(why) => panic!(why),
+                };
+
+                let bvalue: BencodexValue =
+                    match TestsuiteYamlLoader::load_from_str(&content.to_string()) {
                         Ok(v) => v.first().unwrap().to_owned(),
                         Err(why) => panic!(why),
                     };
-                    
-                    Spec { bvalue: bvalue, encoded: encoded, name: path.file_name().unwrap().to_str().unwrap().to_owned() }
-                } else {
-                    unreachable!();
+
+                Spec {
+                    bvalue: bvalue,
+                    encoded: encoded,
+                    name: path.file_name().unwrap().to_str().unwrap().to_owned(),
                 }
-            }).collect::<Vec<_>>();
+            } else {
+                unreachable!();
+            }
+        })
+        .collect::<Vec<_>>();
     Ok(files)
 }

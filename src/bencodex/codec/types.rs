@@ -1,4 +1,4 @@
-use num_bigint::{ BigInt };
+use num_bigint::BigInt;
 use std::collections::BTreeMap;
 
 #[derive(PartialEq, Debug, Clone)]

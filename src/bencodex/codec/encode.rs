@@ -1,11 +1,11 @@
 use super::types::*;
-use std::io;
-use std::collections::BTreeMap;
 use std::cmp::Ordering;
+use std::collections::BTreeMap;
+use std::io;
 
 use itertools::Itertools;
 
-use num_bigint::{ BigInt };
+use num_bigint::BigInt;
 
 pub trait Encodable {
     fn encode(self, writer: &mut io::Write);
@@ -110,10 +110,11 @@ fn compare_vector<T: Ord>(xs: &Vec<T>, ys: &Vec<T>) -> Ordering {
 
 impl Encodable for BTreeMap<BencodexKey, BencodexValue> {
     fn encode(self, writer: &mut io::Write) {
-        let pairs = self.into_iter()
+        let pairs = self
+            .into_iter()
             .map(|(key, value)| {
                 let key_bytes = encode_key(&key);
-                ( key, key_bytes, value ) 
+                (key, key_bytes, value)
             })
             .sorted_by(|(x_key, x_key_bytes, _), (y_key, y_key_bytes, _)| {
                 match x_key {
@@ -129,11 +130,11 @@ impl Encodable for BTreeMap<BencodexKey, BencodexValue> {
                 compare_vector(&x_key_bytes, &y_key_bytes)
             });
 
-            writer.write(&[b'd']);
-            for (_, key_bytes, value) in pairs {
-                writer.write(&key_bytes);
-                value.encode(writer);
-            }
-            writer.write(&[b'e']);
+        writer.write(&[b'd']);
+        for (_, key_bytes, value) in pairs {
+            writer.write(&key_bytes);
+            value.encode(writer);
+        }
+        writer.write(&[b'e']);
     }
 }
