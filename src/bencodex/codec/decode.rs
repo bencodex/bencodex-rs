@@ -9,32 +9,32 @@ use std::str;
 use std::str::FromStr;
 
 #[derive(Debug)]
-pub enum DecodableErrorReason {
+pub enum DecodeErrorReason {
     InvalidBencodexValue,
     UnexpectedToken { token: u8, point: usize },
 }
 
 #[derive(Debug)]
-pub struct DecodableError {
-    pub reason: DecodableErrorReason,
+pub struct DecodeError {
+    pub reason: DecodeErrorReason,
 }
 
-impl fmt::Display for DecodableError {
+impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "DecodableError (reason: {:?})", self.reason)
     }
 }
 
-impl Error for DecodableError {}
+impl Error for DecodeError {}
 
-pub trait Decodable {
-    fn decode(self) -> Result<BencodexValue, DecodableError>;
+pub trait Decode {
+    fn decode(self) -> Result<BencodexValue, DecodeError>;
 }
 
-fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodableError> {
+fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     if start >= vector.len() {
-        return Err(DecodableError {
-            reason: DecodableErrorReason::InvalidBencodexValue,
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
         });
     }
 
@@ -47,8 +47,8 @@ fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize),
         b't' => Ok((BencodexValue::Boolean(true), 1)),
         b'f' => Ok((BencodexValue::Boolean(false), 1)),
         b'n' => Ok((BencodexValue::Null(()), 1)),
-        _ => Err(DecodableError {
-            reason: DecodableErrorReason::UnexpectedToken {
+        _ => Err(DecodeError {
+            reason: DecodeErrorReason::UnexpectedToken {
                 token: vector[start],
                 point: start,
             },
@@ -57,16 +57,13 @@ fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize),
 }
 
 // start must be on 'd'
-fn decode_dict_impl(
-    vector: &Vec<u8>,
-    start: usize,
-) -> Result<(BencodexValue, usize), DecodableError> {
+fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
     let mut map = BTreeMap::new();
     while vector[start + tsize] != b'e' {
         if start + tsize >= vector.len() {
-            return Err(DecodableError {
-                reason: DecodableErrorReason::InvalidBencodexValue,
+            return Err(DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
             });
         }
 
@@ -80,8 +77,8 @@ fn decode_dict_impl(
             BencodexValue::Text(s) => BencodexKey::Text(s),
             BencodexValue::Binary(b) => BencodexKey::Binary(b),
             _ => {
-                return Err(DecodableError {
-                    reason: DecodableErrorReason::InvalidBencodexValue,
+                return Err(DecodeError {
+                    reason: DecodeErrorReason::InvalidBencodexValue,
                 })
             }
         };
@@ -100,10 +97,7 @@ fn decode_dict_impl(
 }
 
 // start must be on 'l'
-fn decode_list_impl(
-    vector: &Vec<u8>,
-    start: usize,
-) -> Result<(BencodexValue, usize), DecodableError> {
+fn decode_list_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
     let mut list = Vec::new();
     while start + tsize < vector.len() && vector[start + tsize] != b'e' {
@@ -122,12 +116,12 @@ fn decode_list_impl(
 fn decode_byte_string_impl(
     vector: &Vec<u8>,
     start: usize,
-) -> Result<(BencodexValue, usize), DecodableError> {
+) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 0;
     let (length, size) = match read_number(&vector[start + tsize..]) {
         None => {
-            return Err(DecodableError {
-                reason: DecodableErrorReason::InvalidBencodexValue,
+            return Err(DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
             })
         }
         Some(v) => v,
@@ -135,8 +129,8 @@ fn decode_byte_string_impl(
     tsize += size;
 
     if vector[start + tsize] != b':' {
-        return Err(DecodableError {
-            reason: DecodableErrorReason::UnexpectedToken {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::UnexpectedToken {
                 token: vector[start + tsize],
                 point: start + tsize,
             },
@@ -154,12 +148,12 @@ fn decode_byte_string_impl(
 fn decode_unicode_string_impl(
     vector: &Vec<u8>,
     start: usize,
-) -> Result<(BencodexValue, usize), DecodableError> {
+) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
     let (length, size) = match read_number(&vector[start + tsize..]) {
         None => {
-            return Err(DecodableError {
-                reason: DecodableErrorReason::InvalidBencodexValue,
+            return Err(DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
             })
         }
         Some(v) => v,
@@ -167,8 +161,8 @@ fn decode_unicode_string_impl(
     tsize += size;
 
     if vector[start + tsize] != b':' {
-        return Err(DecodableError {
-            reason: DecodableErrorReason::UnexpectedToken {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::UnexpectedToken {
                 token: vector[start + tsize],
                 point: start + tsize,
             },
@@ -180,8 +174,8 @@ fn decode_unicode_string_impl(
     let text = match str::from_utf8(&vector[start + tsize..start + tsize + length_size]) {
         Ok(v) => v,
         Err(e) => {
-            return Err(DecodableError {
-                reason: DecodableErrorReason::InvalidBencodexValue,
+            return Err(DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
             })
         }
     };
@@ -193,12 +187,12 @@ fn decode_unicode_string_impl(
 fn decode_number_impl(
     vector: &Vec<u8>,
     start: usize,
-) -> Result<(BencodexValue, usize), DecodableError> {
+) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
     let (number, size) = match read_number(&vector[start + tsize..]) {
         None => {
-            return Err(DecodableError {
-                reason: DecodableErrorReason::InvalidBencodexValue,
+            return Err(DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
             })
         }
         Some(v) => v,
@@ -206,8 +200,8 @@ fn decode_number_impl(
     tsize += size;
 
     if vector[start + tsize] != b'e' {
-        Err(DecodableError {
-            reason: DecodableErrorReason::UnexpectedToken {
+        Err(DecodeError {
+            reason: DecodeErrorReason::UnexpectedToken {
                 token: vector[start + tsize],
                 point: start + tsize,
             },
@@ -238,8 +232,8 @@ fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
     }
 }
 
-impl Decodable for Vec<u8> {
-    fn decode(self) -> Result<BencodexValue, DecodableError> {
+impl Decode for Vec<u8> {
+    fn decode(self) -> Result<BencodexValue, DecodeError> {
         match decode_impl(&self, 0) {
             Ok(v) => Ok(v.0),
             Err(e) => Err(e),
