@@ -1,0 +1,13 @@
+on: push
+name: Lint
+jobs:
+  run-tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions-rs/toolchain@v1.0.3
+        with:
+          toolchain: 1.49.0
+      - run: cargo fmt -- --check
