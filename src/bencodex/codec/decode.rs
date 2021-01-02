@@ -51,6 +51,7 @@ fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
             BencodexValue::Binary(b) => BencodexKey::Binary(b),
             _ => todo!(),
         };
+        let index = start + tsize;
         let (value, size) = decode_impl(vector, index);
         tsize += size;
         match map.insert(key, value) {
