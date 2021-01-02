@@ -1,6 +1,6 @@
 use super::utils;
 #[cfg(test)]
-use crate::bencodex::codec::encode::Encode;
+use bencodex::codec::encode::Encode;
 
 #[test]
 fn spec_test() {

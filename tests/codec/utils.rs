@@ -10,7 +10,7 @@ use yaml_rust::parser::Parser;
 use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use yaml_rust::Event;
 
-use crate::bencodex::codec::types::{BencodexKey, BencodexValue};
+use bencodex::codec::types::{BencodexKey, BencodexValue};
 
 #[derive(PartialEq, Debug)]
 pub struct Spec {

@@ -1,7 +1,5 @@
-pub mod bencodex;
+pub mod codec;
 
-mod tests;
-
-pub use bencodex::codec::decode::{Decode, DecodeError, DecodeErrorReason};
-pub use bencodex::codec::encode::Encode;
-pub use bencodex::codec::types::{BencodexKey, BencodexValue};
+pub use codec::decode::{Decode, DecodeError, DecodeErrorReason};
+pub use codec::encode::Encode;
+pub use codec::types::{BencodexKey, BencodexValue};
