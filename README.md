@@ -1,2 +1,6 @@
 # bencodex-rs
-The Rust implementation of Bencodex
+
+The [Rust] implementation of [Bencodex].
+
+[Rust]: https://rust-lang.org/
+[Bencodex]: https://bencodex.org/
