@@ -6,24 +6,24 @@ use std::collections::BTreeMap;
 use std::io;
 
 pub trait Encodable {
-    fn encode(self, writer: &mut io::Write);
+    fn encode(self, writer: &mut dyn io::Write);
 }
 
 impl Encodable for Vec<u8> {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         write!(writer, "{}:", self.len());
         writer.write(&self);
     }
 }
 
 impl Encodable for i64 {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         write!(writer, "i{}e", self);
     }
 }
 
 impl Encodable for String {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         let bytes = self.into_bytes();
         write!(writer, "u{}:", bytes.len());
         writer.write(&bytes);
@@ -31,7 +31,7 @@ impl Encodable for String {
 }
 
 impl Encodable for bool {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         writer.write(match self {
             true => &[b't'],
             false => &[b'f'],
@@ -40,7 +40,7 @@ impl Encodable for bool {
 }
 
 impl Encodable for BigInt {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         writer.write(&[b'i']);
         writer.write(&self.to_str_radix(10).into_bytes());
         writer.write(&[b'e']);
@@ -48,7 +48,7 @@ impl Encodable for BigInt {
 }
 
 impl Encodable for Vec<BencodexValue> {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         writer.write(&[b'l']);
         for el in self {
             el.encode(writer);
@@ -58,7 +58,7 @@ impl Encodable for Vec<BencodexValue> {
 }
 
 impl Encodable for () {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         writer.write(&[b'n']);
     }
 }
@@ -81,7 +81,7 @@ fn encode_key(key: &BencodexKey) -> Vec<u8> {
 }
 
 impl Encodable for BencodexValue {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         match self {
             BencodexValue::Binary(x) => x.encode(writer),
             BencodexValue::Text(x) => x.encode(writer),
@@ -107,7 +107,7 @@ fn compare_vector<T: Ord>(xs: &Vec<T>, ys: &Vec<T>) -> Ordering {
 }
 
 impl Encodable for BTreeMap<BencodexKey, BencodexValue> {
-    fn encode(self, writer: &mut io::Write) {
+    fn encode(self, writer: &mut dyn io::Write) {
         let pairs = self
             .into_iter()
             .map(|(key, value)| {
