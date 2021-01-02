@@ -2,16 +2,6 @@
 
 use crate::bencodex::codec::encode::Encodable;
 use super::utils;
-use num_bigint::BigInt;
-
-#[test]
-#[allow(dead_code)]
-fn encode_number() {
-    let mut buf: Vec<u8> = vec![];
-    BigInt::from(0).encode(&mut buf);
-    println!("{}", buf.len());    
-    assert_eq!(vec![b'i', b'0', b'e'], buf);
-}
 
 #[test]
 fn spec_test() {
