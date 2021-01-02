@@ -143,11 +143,12 @@ fn decode_unicode_string_impl(vector: &Vec<u8>, start: usize) -> Result<(Bencode
     };
 
     tsize += 1;
-    let text = match str::from_utf8(&vector[start + tsize..start + tsize + length.to_usize().unwrap()]) {
+    let length_size = length.to_usize().unwrap();
+    let text = match str::from_utf8(&vector[start + tsize..start + tsize + length_size]) {
         Ok(v) => v,
         Err(e) => return Err(DecodableError { reason: DecodableErrorReason::InvalidBencodexValue }),
     };
-    tsize += length.to_usize().unwrap();
+    tsize += length_size;
     Ok((BencodexValue::Text(text.to_string()), tsize))
 }
 
