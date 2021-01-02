@@ -2,15 +2,13 @@ use yaml_rust::parser::Parser;
 use num_bigint::BigInt;
 use yaml_rust::parser::MarkedEventReceiver;
 use yaml_rust::Event;
-use yaml_rust::scanner::{Marker, ScanError, TScalarStyle, TokenType};
+use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use num_traits::cast::FromPrimitive;
 use std::fs;
 use std::fs::DirEntry;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use std::path::{ Path, PathBuf };
-use yaml_rust::{ Yaml };
-use yaml_rust::yaml::Hash;
+use std::path::PathBuf;
 
 use crate::bencodex::codec::types::{ BencodexKey, BencodexValue };
 
@@ -59,7 +57,7 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                 let node = self.doc_stack.pop().unwrap();
                 self.insert_new_node(node);
             }
-            Event::Scalar(v, style, aid, tag) => {
+            Event::Scalar(v, _, aid, tag) => {
                 let value = if let Some(TokenType::Tag(ref handle, ref suffix)) = tag {
                     // XXX tag:yaml.org,2002:
                     if handle == "!!" {
