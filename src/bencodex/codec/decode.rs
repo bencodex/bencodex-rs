@@ -34,7 +34,7 @@ fn decode_impl(vector:& Vec<u8>, start: usize) -> (BencodexValue, usize) {
     }
 }
 
-// start must be after 'd'
+// start must be on 'd'
 fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
     let mut tsize: usize = 1;
     let mut map = BTreeMap::new();
@@ -62,7 +62,7 @@ fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
     (BencodexValue::Dictionary(map), tsize + 1)
 }
 
-// start must be after 'l'
+// start must be on 'l'
 fn decode_list_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
     let mut tsize: usize = 1;
     let mut list = Vec::new();
@@ -75,7 +75,6 @@ fn decode_list_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
     (BencodexValue::List(list), tsize + 1)
 }
 
-// start must be after 'u'
 fn decode_byte_string_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
     let mut tsize: usize = 0;
     let (length, size) = match read_number(&vector[start + tsize..]) {
@@ -92,7 +91,7 @@ fn decode_byte_string_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, us
     (BencodexValue::Binary(vector[start + tsize..start + tsize + length_size].to_vec()), tsize + length_size)
 }
 
-// start must be after 'u'
+// start must be on 'u'
 fn decode_unicode_string_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
     let mut tsize: usize = 1;
     let (length, size) = match read_number(&vector[start + tsize..]) {
@@ -113,7 +112,7 @@ fn decode_unicode_string_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue,
     (BencodexValue::Text(text.to_string()), tsize)
 }
 
-// start must be after 'i'
+// start must be on 'i'
 fn decode_number_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, usize) {
     let mut tsize: usize = 1;
     let (number, size) = match read_number(&vector[start + tsize..]) {
