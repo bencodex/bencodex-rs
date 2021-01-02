@@ -2,6 +2,8 @@ use super::types::*;
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::fmt;
 use std::result::Result;
 use std::str;
 use std::str::FromStr;
@@ -16,6 +18,14 @@ pub enum DecodableErrorReason {
 pub struct DecodableError {
     pub reason: DecodableErrorReason,
 }
+
+impl fmt::Display for DecodableError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "DecodableError (reason: {:?})", self.reason)
+    }
+}
+
+impl Error for DecodableError {}
 
 pub trait Decodable {
     fn decode(self) -> Result<BencodexValue, DecodableError>;
