@@ -88,8 +88,8 @@ fn decode_byte_string_impl(vector: &Vec<u8>, start: usize) -> (BencodexValue, us
         todo!()
     };
     tsize += 1;
-    let lengthSize = length.to_usize().unwrap();
-    (BencodexValue::Binary(vector[start + tsize..start + tsize + lengthSize].to_vec()), tsize + lengthSize)
+    let length_size = length.to_usize().unwrap();
+    (BencodexValue::Binary(vector[start + tsize..start + tsize + length_size].to_vec()), tsize + length_size)
 }
 
 // start must be after 'u'

@@ -112,26 +112,26 @@ impl Encodable for BTreeMap<BencodexKey, BencodexValue> {
     fn encode(self, writer: &mut io::Write) {
         let pairs = self.into_iter()
             .map(|(key, value)| {
-                let keyBytes = encode_key(&key);
-                ( key, keyBytes, value ) 
+                let key_bytes = encode_key(&key);
+                ( key, key_bytes, value ) 
             })
-            .sorted_by(|(xKey, xKeyBytes, _), (yKey, yKeyBytes, _)| {
-                match xKey {
+            .sorted_by(|(x_key, x_key_bytes, _), (y_key, y_key_bytes, _)| {
+                match x_key {
                     BencodexKey::Text(_) => return Ordering::Greater,
                     _ => (),
                 };
 
-                match yKey {
+                match y_key {
                     BencodexKey::Text(_) => return Ordering::Less,
                     _ => (),
                 };
 
-                compare_vector(&xKeyBytes, &yKeyBytes)
+                compare_vector(&x_key_bytes, &y_key_bytes)
             });
 
             writer.write(&[b'd']);
-            for (_, keyBytes, value) in pairs {
-                writer.write(&keyBytes);
+            for (_, key_bytes, value) in pairs {
+                writer.write(&key_bytes);
                 value.encode(writer);
             }
             writer.write(&[b'e']);
