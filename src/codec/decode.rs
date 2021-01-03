@@ -320,5 +320,11 @@ mod tests {
         fn should_return_none_with_single_minus_sign() {
             assert_eq!(None, read_number(b"-"));
         }
+
+        #[test]
+        fn should_return_none_with_single_minus_sign_and_invalid_char() {
+            assert_eq!(None, read_number(b"-e"));
+            assert_eq!(None, read_number(b"-x"));
+        }
     }
 }
