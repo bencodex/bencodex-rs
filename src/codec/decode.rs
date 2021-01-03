@@ -338,6 +338,23 @@ mod tests {
         }
     }
 
+    mod decode_error {
+        mod display_impl {
+            use super::super::super::*;
+
+            #[test]
+            fn fmt() {
+                assert_eq!(
+                    "DecodeError (reason: InvalidBencodexValue)",
+                    DecodeError {
+                        reason: DecodeErrorReason::InvalidBencodexValue
+                    }
+                    .to_string()
+                )
+            }
+        }
+    }
+
     mod read_number {
         use super::super::*;
 
