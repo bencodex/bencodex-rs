@@ -255,8 +255,17 @@ fn decode_number_impl(
 }
 
 fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
-    let mut size: usize = if s[0] == b'-' { 1 } else { 0 };
-    loop {
+    if s.len() == 0 {
+        return None;
+    }
+
+    let is_negative = s[0] == b'-';
+    if s.len() == 1 && is_negative {
+        return None;
+    }
+
+    let mut size: usize = if is_negative { 1 } else { 0 };
+    while size < s.len() {
         match s[size] {
             b'0'..=b'9' => {
                 size += 1;
