@@ -296,6 +296,48 @@ impl Decode for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
+    mod decode_impl {
+        use super::super::*;
+
+        #[test]
+        fn should_return_error_with_overflowed_start() {
+            let expected_error = DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            };
+            assert_eq!(expected_error, decode_impl(&vec![], 1).unwrap_err());
+            assert_eq!(
+                expected_error,
+                decode_impl(&vec![b'1', b'2'], 2).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_impl(&vec![b'1', b'2'], 20).unwrap_err()
+            );
+        }
+
+        #[test]
+        fn should_return_unexpected_token_error_with_invalid_source() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'x',
+                        point: 0,
+                    }
+                },
+                decode_impl(&vec![b'x'], 0).unwrap_err()
+            );
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'k',
+                        point: 4,
+                    }
+                },
+                decode_impl(&vec![b'x', b'y', b'z', b'o', b'k'], 4).unwrap_err()
+            );
+        }
+    }
+
     mod read_number {
         use super::super::*;
 
