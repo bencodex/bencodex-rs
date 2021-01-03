@@ -35,7 +35,7 @@ pub enum DecodeErrorReason {
 }
 
 /// The error type which is returned from decoding a Bencodex value through [`Decode::decode`].
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct DecodeError {
     pub reason: DecodeErrorReason,
 }
