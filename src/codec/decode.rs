@@ -106,12 +106,6 @@ fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, us
     let mut tsize: usize = 1;
     let mut map = BTreeMap::new();
     while vector[start + tsize] != b'e' {
-        if start + tsize >= vector.len() {
-            return Err(DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            });
-        }
-
         let index = start + tsize;
         let (value, size) = match decode_impl(vector, index) {
             Ok(v) => v,
