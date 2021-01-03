@@ -231,7 +231,10 @@ fn decode_number_impl(
     let (number, size) = match read_number(&vector[start + tsize..]) {
         None => {
             return Err(DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
+                reason: DecodeErrorReason::UnexpectedToken {
+                    token: vector[start + tsize],
+                    point: start + tsize,
+                },
             })
         }
         Some(v) => v,
