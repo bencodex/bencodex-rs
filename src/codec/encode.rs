@@ -217,8 +217,14 @@ mod tests {
 
         #[test]
         fn should_return_equal() {
-            assert_eq!(Ordering::Equal, compare_vector(&Vec::<u8>::new(), &Vec::<u8>::new()));
-            assert_eq!(Ordering::Equal, compare_vector(&vec![1, 2, 3], &vec![1, 2, 3]));
+            assert_eq!(
+                Ordering::Equal,
+                compare_vector(&Vec::<u8>::new(), &Vec::<u8>::new())
+            );
+            assert_eq!(
+                Ordering::Equal,
+                compare_vector(&vec![1, 2, 3], &vec![1, 2, 3])
+            );
         }
 
         #[test]
@@ -227,14 +233,20 @@ mod tests {
             assert_eq!(Ordering::Less, compare_vector(&vec![0], &vec![1, 2, 3]));
             assert_eq!(Ordering::Less, compare_vector(&vec![1], &vec![9, 1, 1]));
             assert_eq!(Ordering::Less, compare_vector(&vec![1, 2], &vec![1, 2, 3]));
-            assert_eq!(Ordering::Less, compare_vector(&vec![1, 9, 9], &vec![9, 1, 1]));
+            assert_eq!(
+                Ordering::Less,
+                compare_vector(&vec![1, 9, 9], &vec![9, 1, 1])
+            );
         }
 
         #[test]
         fn should_return_greater() {
             assert_eq!(Ordering::Greater, compare_vector(&vec![9], &vec![]));
             assert_eq!(Ordering::Greater, compare_vector(&vec![9], &vec![1, 2, 3]));
-            assert_eq!(Ordering::Greater, compare_vector(&vec![1, 9, 2], &vec![1, 2, 2]));
+            assert_eq!(
+                Ordering::Greater,
+                compare_vector(&vec![1, 9, 2], &vec![1, 2, 2])
+            );
         }
     }
 }
