@@ -8,12 +8,33 @@ use std::result::Result;
 use std::str;
 use std::str::FromStr;
 
+/// The enum type which describes why [`DecodeError`] occurred.
 #[derive(Debug, PartialEq)]
 pub enum DecodeErrorReason {
+    /// This should be used when it failed to decode. In future, it will be separated more and more.
     InvalidBencodexValue,
+    /// This should be used when it failed to decode because there is unexpected token appeared while decoding.
+    /// 
+    /// # Example
+    /// 
+    /// For example, The encoded bytes of [`BencodexValue::Number`] are formed as 'i{}e' (e.g., 'i0e', 'i2147483647e'). If it is not satisified, it should be result through inside [`Err`].
+    /// 
+    /// ```
+    /// use bencodex::{ Decode, DecodeError, DecodeErrorReason };
+    /// 
+    /// //                     v -- should be b'0' ~ b'9' digit.
+    /// let vec = vec![b'i', b':', b'e'];
+    /// let error = vec.decode().unwrap_err().reason;
+    /// let expected_error = DecodeErrorReason::UnexpectedToken {
+    ///     token: b':',
+    ///     point: 1,
+    /// };
+    /// assert_eq!(expected_error, error);
+    /// ```
     UnexpectedToken { token: u8, point: usize },
 }
 
+/// The error type which is returned from decoding a Bencodex value through [`Decode::decode`].
 #[derive(Debug)]
 pub struct DecodeError {
     pub reason: DecodeErrorReason,
@@ -27,7 +48,25 @@ impl fmt::Display for DecodeError {
 
 impl Error for DecodeError {}
 
+/// `Decode` is a trait to decode a [Bencodex] value.
+///
+/// [Bencodex]: https://bencodex.org/
 pub trait Decode {
+    /// Decodes a [Bencodex] value to return from this type.
+    ///
+    /// If decoding succeeds, return the value inside [`Ok`], otherwize
+    ///
+    /// # Examples
+    /// Basic usage with [`Vec<u8>`], the default implementor which implements `Decode`.
+    /// ```
+    /// use bencodex::{ Decode, BencodexValue };
+    ///
+    /// let vec = vec![b'n'];
+    /// let null = vec.decode().unwrap();
+    ///
+    /// assert_eq!(BencodexValue::Null(()), null);
+    /// ```
+    /// [Bencodex]: https://bencodex.org/
     fn decode(self) -> Result<BencodexValue, DecodeError>;
 }
 
