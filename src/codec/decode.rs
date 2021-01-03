@@ -264,7 +264,7 @@ fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
         return None;
     }
 
-    let mut size: usize = if is_negative { 1 } else { 0 };
+    let mut size: usize = is_negative as usize;
     while size < s.len() {
         match s[size] {
             b'0'..=b'9' => {
