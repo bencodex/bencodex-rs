@@ -6,7 +6,26 @@ use std::collections::BTreeMap;
 use std::io;
 use std::result::Result;
 
+/// `Encode` is a trait to encode a [Bencodex] value.
+///
+/// [Bencodex]: https://bencodex.org/
 pub trait Encode {
+    /// Encode a [Bencodex] value from this type.
+    ///
+    /// If encoding succeeds, return [`Ok`]. Otherwize, it will pass [`std::io::Error`] occurred in inner logic.
+    ///
+    /// # Examples
+    /// Basic usage with [`BencodexValue::Text`]:
+    /// ```
+    /// use bencodex::{ Encode, BencodexValue };
+    ///
+    /// let text = BencodexValue::Text("text".to_string());
+    /// let mut vec = Vec::new();
+    /// text.encode(&mut vec);
+    ///
+    /// assert_eq!(vec, vec![b'u', b'4', b':', b't', b'e', b'x', b't']);
+    /// ```
+    /// [Bencodex]: https://bencodex.org/
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error>;
 }
 
