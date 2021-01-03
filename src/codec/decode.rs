@@ -338,6 +338,80 @@ mod tests {
         }
     }
 
+    mod decode_dict_impl {
+        use super::super::*;
+
+        #[test]
+        fn should_return_error_with_insufficient_length_source() {
+            let expected_error = DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            };
+            assert_eq!(
+                expected_error,
+                decode_dict_impl(&vec![b'd'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_dict_impl(&vec![b'd'], 2).unwrap_err()
+            );
+            assert_eq!(expected_error, decode_impl(&vec![], 0).unwrap_err());
+        }
+
+        #[test]
+        fn should_return_error_with_source_having_incorrect_key() {
+            let expected_error = DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            };
+            // { 0: null }
+            assert_eq!(
+                expected_error,
+                decode_impl(&vec![b'd', b'i', b'0', b'e', b'n', b'e'], 0).unwrap_err()
+            );
+            // { null: null }
+            assert_eq!(
+                expected_error,
+                decode_impl(&vec![b'd', b'n', b'n', b'e'], 0).unwrap_err()
+            );
+            // { list: null }
+            assert_eq!(
+                expected_error,
+                decode_impl(&vec![b'd', b'l', b'e', b'n', b'e'], 0).unwrap_err()
+            );
+            // { dictionary: null }
+            assert_eq!(
+                expected_error,
+                decode_impl(&vec![b'd', b'd', b'e', b'n', b'e'], 0).unwrap_err()
+            );
+            // { boolean: null }
+            assert_eq!(
+                expected_error,
+                decode_impl(&vec![b'd', b't', b'e', b'n', b'e'], 0).unwrap_err()
+            );
+        }
+
+        #[test]
+        fn should_pass_error() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'k',
+                        point: 1,
+                    },
+                },
+                decode_impl(&vec![b'd', b'k', b'n', b'e'], 0).unwrap_err()
+            );
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'k',
+                        point: 4,
+                    },
+                },
+                decode_impl(&vec![b'd', b'1', b':', b'a', b'k', b'e'], 0).unwrap_err()
+            );
+        }
+    }
+
     mod decode_error {
         mod display_impl {
             use super::super::super::*;
