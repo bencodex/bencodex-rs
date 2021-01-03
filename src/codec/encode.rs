@@ -12,7 +12,7 @@ use std::result::Result;
 pub trait Encode {
     /// Encode a [Bencodex] value from this type.
     ///
-    /// If encoding succeeds, return [`Ok`]. Otherwize, it will pass [`std::io::Error`] occurred in inner logic.
+    /// If encoding succeeds, return [`Ok`]. Otherwise, it will pass [`std::io::Error`] occurred in inner logic.
     ///
     /// # Examples
     /// Basic usage with [`BencodexValue::Text`]:

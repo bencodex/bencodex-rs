@@ -54,7 +54,7 @@ impl Error for DecodeError {}
 pub trait Decode {
     /// Decodes a [Bencodex] value to return from this type.
     ///
-    /// If decoding succeeds, return the value inside [`Ok`]. Otherwize, return the [`DecodeError`] with [`DecodeErrorReason`] inside [`Err`].
+    /// If decoding succeeds, return the value inside [`Ok`]. Otherwise, return the [`DecodeError`] with [`DecodeErrorReason`] inside [`Err`].
     ///
     /// # Examples
     /// Basic usage with [`Vec<u8>`], the default implementor which implements `Decode`.
