@@ -275,7 +275,7 @@ fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
         };
     }
 
-    if size == 0 {
+    if is_negative && size == 1 || size == 0 {
         None
     } else {
         Some((
@@ -319,12 +319,6 @@ mod tests {
         #[test]
         fn should_return_none_with_single_minus_sign() {
             assert_eq!(None, read_number(b"-"));
-        }
-
-        #[test]
-        fn should_return_none_with_single_minus_sign_and_invalid_char() {
-            assert_eq!(None, read_number(b"-e"));
-            assert_eq!(None, read_number(b"-x"));
         }
     }
 }
