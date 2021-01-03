@@ -14,14 +14,14 @@ pub enum DecodeErrorReason {
     /// This should be used when it failed to decode. In future, it will be separated more and more.
     InvalidBencodexValue,
     /// This should be used when it failed to decode because there is unexpected token appeared while decoding.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// For example, The encoded bytes of [`BencodexValue::Number`] are formed as 'i{}e' (e.g., 'i0e', 'i2147483647e'). If it is not satisified, it should be result through inside [`Err`].
-    /// 
+    ///
     /// ```
     /// use bencodex::{ Decode, DecodeError, DecodeErrorReason };
-    /// 
+    ///
     /// //                     v -- should be b'0' ~ b'9' digit.
     /// let vec = vec![b'i', b':', b'e'];
     /// let error = vec.decode().unwrap_err().reason;
@@ -252,11 +252,13 @@ fn decode_number_impl(
 }
 
 fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
-    let mut size: usize = 0;
+    let mut size: usize = if s[0] == b'-' { 1 } else { 0 };
     loop {
-        size += 1;
         match s[size] {
-            b'0'..=b'9' => continue,
+            b'0'..=b'9' => {
+                size += 1;
+                continue;
+            }
             _ => break,
         };
     }
