@@ -8,7 +8,7 @@ use std::result::Result;
 use std::str;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum DecodeErrorReason {
     InvalidBencodexValue,
     UnexpectedToken { token: u8, point: usize },
