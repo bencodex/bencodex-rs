@@ -284,3 +284,32 @@ impl Decode for Vec<u8> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    mod read_number {
+        use super::super::*;
+
+        #[test]
+        fn should_return_none() {
+            assert_eq!(None, read_number(b""));
+        }
+
+        #[test]
+        fn should_return_ok_with_positive() {
+            assert_eq!(Some((BigInt::from(1), 1)), read_number(b"1"));
+            assert_eq!(Some((BigInt::from(326), 3)), read_number(b"326"));
+        }
+
+        #[test]
+        fn should_return_ok_with_negative() {
+            assert_eq!(Some((BigInt::from(-1), 2)), read_number(b"-1"));
+            assert_eq!(Some((BigInt::from(-845), 4)), read_number(b"-845"));
+        }
+
+        #[test]
+        fn should_return_none_with_single_minus_sign() {
+            assert_eq!(None, read_number(b"-"));
+        }
+    }
+}
