@@ -249,4 +249,248 @@ mod tests {
             );
         }
     }
+
+    mod encode {
+        struct ConditionFailWriter {
+            throw_counts: Vec<u64>,
+            call_count: u64,
+        }
+
+        impl ConditionFailWriter {
+            fn new(throw_counts: Vec<u64>) -> ConditionFailWriter {
+                ConditionFailWriter {
+                    throw_counts: throw_counts,
+                    call_count: 0,
+                }
+            }
+        }
+
+        impl std::io::Write for ConditionFailWriter {
+            fn write(&mut self, bytes: &[u8]) -> std::result::Result<usize, std::io::Error> {
+                self.call_count += 1;
+                if self.throw_counts.contains(&self.call_count) {
+                    Err(std::io::Error::new(std::io::ErrorKind::Other, ""))
+                } else {
+                    Ok(bytes.len())
+                }
+            }
+
+            fn flush(&mut self) -> std::result::Result<(), std::io::Error> {
+                Ok(())
+            }
+        }
+
+        mod null {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let bvalue = ();
+
+                // write 'n'
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+
+        mod vec_u8 {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let bvalue = Vec::<u8>::new();
+
+                // write length
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write 'e'
+                let mut writer = ConditionFailWriter::new(vec![2]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write bytes
+                let mut writer = ConditionFailWriter::new(vec![3]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+
+        mod btree_map {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let mut bvalue: BTreeMap<BencodexKey, BencodexValue> = BTreeMap::new();
+                bvalue.insert(BencodexKey::Text("".to_string()), BencodexValue::Null(()));
+
+                // write 'd'
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write key
+                let mut writer = ConditionFailWriter::new(vec![2]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write value
+                let mut writer = ConditionFailWriter::new(vec![3]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write 'e'
+                let mut writer = ConditionFailWriter::new(vec![4]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+
+        mod vec_bvalue {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let bvalue: &mut Vec<BencodexValue> = &mut Vec::new();
+                bvalue.push(BencodexValue::Null(()));
+
+                // write 'l'
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write value
+                let mut writer = ConditionFailWriter::new(vec![2]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write 'e'
+                let mut writer = ConditionFailWriter::new(vec![3]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+
+        mod string {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let bvalue: String = String::new();
+
+                // write 'u'
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write length
+                let mut writer = ConditionFailWriter::new(vec![2]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write ':'
+                let mut writer = ConditionFailWriter::new(vec![3]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write text
+                let mut writer = ConditionFailWriter::new(vec![4]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+
+        mod bool {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let bvalue = true;
+
+                // write 't'
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+
+        mod big_int {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let bvalue = BigInt::from(0);
+
+                // write 'i'
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write number
+                let mut writer = ConditionFailWriter::new(vec![2]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write 'e'
+                let mut writer = ConditionFailWriter::new(vec![3]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+
+        mod i64 {
+            use super::super::super::*;
+            use super::*;
+
+            #[test]
+            fn should_pass_error() {
+                let bvalue: i64 = 0;
+                // write 'i'
+                let mut writer = ConditionFailWriter::new(vec![1]);
+                let err = bvalue.encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write number
+                let mut writer = ConditionFailWriter::new(vec![2]);
+                let err = bvalue.encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write 'e'
+                let mut writer = ConditionFailWriter::new(vec![3]);
+                let err = bvalue.encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+            }
+        }
+    }
 }
