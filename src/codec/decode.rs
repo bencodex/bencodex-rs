@@ -42,7 +42,7 @@ pub struct DecodeError {
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "DecodableError (reason: {:?})", self.reason)
+        write!(f, "DecodeError (reason: {:?})", self.reason)
     }
 }
 
