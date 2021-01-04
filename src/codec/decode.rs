@@ -412,6 +412,39 @@ mod tests {
         }
     }
 
+    mod decode_list_impl {
+        use super::super::*;
+
+        #[test]
+        fn should_return_error_with_insufficient_length_source() {
+            let expected_error = DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            };
+            assert_eq!(
+                expected_error,
+                decode_list_impl(&vec![b'l'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_list_impl(&vec![b'l'], 2).unwrap_err()
+            );
+            assert_eq!(expected_error, decode_list_impl(&vec![], 0).unwrap_err());
+        }
+
+        #[test]
+        fn should_pass_error() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'k',
+                        point: 1,
+                    },
+                },
+                decode_list_impl(&vec![b'l', b'k', b'e'], 0).unwrap_err()
+            );
+        }
+    }
+
     mod decode_error {
         mod display_impl {
             use super::super::super::*;
