@@ -360,7 +360,7 @@ mod tests {
                 expected_error,
                 decode_dict_impl(&vec![b'd'], 2).unwrap_err()
             );
-            assert_eq!(expected_error, decode_impl(&vec![], 0).unwrap_err());
+            assert_eq!(expected_error, decode_dict_impl(&vec![], 0).unwrap_err());
         }
 
         #[test]
@@ -371,27 +371,27 @@ mod tests {
             // { 0: null }
             assert_eq!(
                 expected_error,
-                decode_impl(&vec![b'd', b'i', b'0', b'e', b'n', b'e'], 0).unwrap_err()
+                decode_dict_impl(&vec![b'd', b'i', b'0', b'e', b'n', b'e'], 0).unwrap_err()
             );
             // { null: null }
             assert_eq!(
                 expected_error,
-                decode_impl(&vec![b'd', b'n', b'n', b'e'], 0).unwrap_err()
+                decode_dict_impl(&vec![b'd', b'n', b'n', b'e'], 0).unwrap_err()
             );
             // { list: null }
             assert_eq!(
                 expected_error,
-                decode_impl(&vec![b'd', b'l', b'e', b'n', b'e'], 0).unwrap_err()
+                decode_dict_impl(&vec![b'd', b'l', b'e', b'n', b'e'], 0).unwrap_err()
             );
             // { dictionary: null }
             assert_eq!(
                 expected_error,
-                decode_impl(&vec![b'd', b'd', b'e', b'n', b'e'], 0).unwrap_err()
+                decode_dict_impl(&vec![b'd', b'd', b'e', b'n', b'e'], 0).unwrap_err()
             );
             // { boolean: null }
             assert_eq!(
                 expected_error,
-                decode_impl(&vec![b'd', b't', b'e', b'n', b'e'], 0).unwrap_err()
+                decode_dict_impl(&vec![b'd', b't', b'e', b'n', b'e'], 0).unwrap_err()
             );
         }
 
@@ -404,7 +404,7 @@ mod tests {
                         point: 1,
                     },
                 },
-                decode_impl(&vec![b'd', b'k', b'n', b'e'], 0).unwrap_err()
+                decode_dict_impl(&vec![b'd', b'k', b'n', b'e'], 0).unwrap_err()
             );
             assert_eq!(
                 DecodeError {
@@ -413,7 +413,7 @@ mod tests {
                         point: 4,
                     },
                 },
-                decode_impl(&vec![b'd', b'1', b':', b'a', b'k', b'e'], 0).unwrap_err()
+                decode_dict_impl(&vec![b'd', b'1', b':', b'a', b'k', b'e'], 0).unwrap_err()
             );
         }
     }
