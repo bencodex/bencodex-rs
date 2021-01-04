@@ -137,6 +137,12 @@ fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, us
 
 // start must be on 'l'
 fn decode_list_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
+    if vector.len() < start + 2 {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
+
     let mut tsize: usize = 1;
     let mut list = Vec::new();
     while start + tsize < vector.len() && vector[start + tsize] != b'e' {
