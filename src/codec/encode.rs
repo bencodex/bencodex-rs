@@ -149,16 +149,20 @@ fn compare_vector<T: Ord>(xs: &[T], ys: &[T]) -> Ordering {
     xs.len().cmp(&ys.len())
 }
 
+fn compare_key(x: &BencodexKey, y: &BencodexKey) -> Ordering {
+    match (x, y) {
+        (BencodexKey::Text(x), BencodexKey::Text(y)) => compare_vector(x.as_bytes(), y.as_bytes()),
+        (BencodexKey::Binary(x), BencodexKey::Binary(y)) => compare_vector(x, y),
+        (BencodexKey::Text(_), BencodexKey::Binary(_)) => Ordering::Greater,
+        (BencodexKey::Binary(_), BencodexKey::Text(_)) => Ordering::Less,
+    }
+}
+
 impl Encode for BTreeMap<BencodexKey, BencodexValue> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        let pairs = self.into_iter().sorted_by(|(x, _), (y, _)| match (x, y) {
-            (BencodexKey::Text(x), BencodexKey::Text(y)) => {
-                compare_vector(x.as_bytes(), y.as_bytes())
-            }
-            (BencodexKey::Binary(x), BencodexKey::Binary(y)) => compare_vector(x, y),
-            (BencodexKey::Text(_), BencodexKey::Binary(_)) => Ordering::Greater,
-            (BencodexKey::Binary(_), BencodexKey::Text(_)) => Ordering::Less,
-        });
+        let pairs = self
+            .into_iter()
+            .sorted_by(|(x, _), (y, _)| compare_key(x, y));
 
         if let Err(e) = writer.write(&[b'd']) {
             return Err(e);
