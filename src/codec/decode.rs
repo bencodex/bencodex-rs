@@ -486,6 +486,19 @@ mod tests {
                 decode_byte_string_impl(&vec![], 0).unwrap_err()
             );
         }
+
+        #[test]
+        fn should_return_unexpected_token_error_with_invalid_source() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'k',
+                        point: 1,
+                    }
+                },
+                decode_byte_string_impl(&vec![b'1', b'k', b'a'], 0).unwrap_err()
+            );
+        }
     }
 
     mod decode_error {
