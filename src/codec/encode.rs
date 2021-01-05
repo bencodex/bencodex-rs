@@ -193,6 +193,50 @@ impl Encode for BTreeMap<BencodexKey, BencodexValue> {
 
 #[cfg(test)]
 mod tests {
+    mod compare_key {
+        use super::super::*;
+
+        #[test]
+        fn should_return_equal() {
+            assert_eq!(
+                Ordering::Equal,
+                compare_key(
+                    &BencodexKey::Text("foo".to_string()),
+                    &BencodexKey::Text("foo".to_string())
+                )
+            );
+            assert_eq!(
+                Ordering::Equal,
+                compare_key(
+                    &BencodexKey::Binary(b"bar".to_vec()),
+                    &BencodexKey::Binary(b"bar".to_vec())
+                )
+            );
+        }
+
+        #[test]
+        fn should_return_greater() {
+            assert_eq!(
+                Ordering::Greater,
+                compare_key(
+                    &BencodexKey::Text("".to_string()),
+                    &BencodexKey::Binary(b"".to_vec())
+                )
+            );
+        }
+
+        #[test]
+        fn should_return_less() {
+            assert_eq!(
+                Ordering::Less,
+                compare_key(
+                    &BencodexKey::Binary(b"".to_vec()),
+                    &BencodexKey::Text("".to_string())
+                )
+            );
+        }
+    }
+
     mod compare_vector {
         use super::super::*;
 
