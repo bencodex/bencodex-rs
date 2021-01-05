@@ -119,23 +119,6 @@ impl Encode for () {
     }
 }
 
-fn encode_key(key: &BencodexKey) -> Vec<u8> {
-    let mut buf: Vec<u8> = vec![];
-    let (prefix, bytes) = match key {
-        BencodexKey::Text(s) => (Some(vec![b'u']), s.to_owned().into_bytes()),
-        BencodexKey::Binary(b) => (None as Option<Vec<u8>>, b.clone()),
-    };
-    match prefix {
-        Some(p) => buf.extend(p),
-        _ => (),
-    };
-
-    buf.extend(bytes.len().to_string().into_bytes());
-    buf.push(b':');
-    buf.extend(bytes);
-    buf
-}
-
 impl Encode for BencodexValue {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         // FIXME: rewrite more beautiful.
@@ -154,7 +137,7 @@ impl Encode for BencodexValue {
     }
 }
 
-fn compare_vector<T: Ord>(xs: &Vec<T>, ys: &Vec<T>) -> Ordering {
+fn compare_vector<T: Ord>(xs: &[T], ys: &[T]) -> Ordering {
     for (x, y) in xs.iter().zip(ys) {
         match x.cmp(&y) {
             Ordering::Equal => continue,
@@ -168,32 +151,26 @@ fn compare_vector<T: Ord>(xs: &Vec<T>, ys: &Vec<T>) -> Ordering {
 
 impl Encode for BTreeMap<BencodexKey, BencodexValue> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        let pairs = self
-            .into_iter()
-            .map(|(key, value)| {
-                let key_bytes = encode_key(&key);
-                (key, key_bytes, value)
-            })
-            .sorted_by(|(x_key, x_key_bytes, _), (y_key, y_key_bytes, _)| {
-                match x_key {
-                    BencodexKey::Text(_) => return Ordering::Greater,
-                    _ => (),
-                };
-
-                match y_key {
-                    BencodexKey::Text(_) => return Ordering::Less,
-                    _ => (),
-                };
-
-                compare_vector(&x_key_bytes, &y_key_bytes)
-            });
+        let pairs = self.into_iter().sorted_by(|(x, _), (y, _)| match (x, y) {
+            (BencodexKey::Text(x), BencodexKey::Text(y)) => {
+                compare_vector(x.as_bytes(), y.as_bytes())
+            }
+            (BencodexKey::Binary(x), BencodexKey::Binary(y)) => compare_vector(x, y),
+            (BencodexKey::Text(_), BencodexKey::Binary(_)) => Ordering::Greater,
+            (BencodexKey::Binary(_), BencodexKey::Text(_)) => Ordering::Less,
+        });
 
         if let Err(e) = writer.write(&[b'd']) {
             return Err(e);
         }
 
-        for (_, key_bytes, value) in pairs {
-            if let Err(e) = writer.write(&key_bytes) {
+        for (key, value) in pairs {
+            let key = match key {
+                BencodexKey::Binary(x) => BencodexValue::Binary(x),
+                BencodexKey::Text(x) => BencodexValue::Text(x),
+            };
+
+            if let Err(e) = key.encode(writer) {
                 return Err(e);
             }
 
