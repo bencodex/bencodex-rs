@@ -205,6 +205,11 @@ fn decode_unicode_string_impl(
     start: usize,
 ) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
+    if vector.len() < start + tsize + 1 {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
     let (length, size) = match read_number(&vector[start + tsize..]) {
         None => {
             return Err(DecodeError {
@@ -213,8 +218,21 @@ fn decode_unicode_string_impl(
         }
         Some(v) => v,
     };
+    if length < BigInt::from(0) {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::UnexpectedToken {
+                token: vector[start + tsize],
+                point: start + tsize,
+            },
+        });
+    }
     tsize += size;
 
+    if vector.len() < start + tsize + 1 {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
     if vector[start + tsize] != b':' {
         return Err(DecodeError {
             reason: DecodeErrorReason::UnexpectedToken {
@@ -226,6 +244,11 @@ fn decode_unicode_string_impl(
 
     tsize += 1;
     let length_size = length.to_usize().unwrap();
+    if vector.len() < start + tsize + length_size {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
     let text = match str::from_utf8(&vector[start + tsize..start + tsize + length_size]) {
         Ok(v) => v,
         Err(_) => {
