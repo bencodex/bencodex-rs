@@ -451,6 +451,33 @@ mod tests {
         }
     }
 
+    mod decode_byte_string_impl {
+        use super::super::*;
+
+        #[test]
+        fn should_return_error_with_insufficient_length_source() {
+            let expected_error = DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            };
+            assert_eq!(
+                expected_error,
+                decode_byte_string_impl(&vec![b'1'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_byte_string_impl(&vec![b'1', b':'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_byte_string_impl(&vec![b'2', b':', b'a'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_byte_string_impl(&vec![], 0).unwrap_err()
+            );
+        }
+    }
+
     mod decode_error {
         mod display_impl {
             use super::super::super::*;
