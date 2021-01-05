@@ -330,20 +330,38 @@ mod tests {
                 assert_eq!(std::io::ErrorKind::Other, err.kind());
                 assert_eq!("", err.to_string());
 
-                // write key
+                // write 'u' key prefix
                 let mut writer = ConditionFailWriter::new(vec![2]);
                 let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
                 assert_eq!(std::io::ErrorKind::Other, err.kind());
                 assert_eq!("", err.to_string());
 
-                // write value
+                // write '{}' key bytes length
                 let mut writer = ConditionFailWriter::new(vec![3]);
                 let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
                 assert_eq!(std::io::ErrorKind::Other, err.kind());
                 assert_eq!("", err.to_string());
 
-                // write 'e'
+                // write ":" key delimeter
                 let mut writer = ConditionFailWriter::new(vec![4]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write "" key bytes
+                let mut writer = ConditionFailWriter::new(vec![5]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write value
+                let mut writer = ConditionFailWriter::new(vec![6]);
+                let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
+                assert_eq!(std::io::ErrorKind::Other, err.kind());
+                assert_eq!("", err.to_string());
+
+                // write 'e'
+                let mut writer = ConditionFailWriter::new(vec![7]);
                 let err = bvalue.to_owned().encode(&mut writer).unwrap_err();
                 assert_eq!(std::io::ErrorKind::Other, err.kind());
                 assert_eq!("", err.to_string());
