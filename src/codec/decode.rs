@@ -228,7 +228,7 @@ fn decode_unicode_string_impl(
     let length_size = length.to_usize().unwrap();
     let text = match str::from_utf8(&vector[start + tsize..start + tsize + length_size]) {
         Ok(v) => v,
-        Err(e) => {
+        Err(_) => {
             return Err(DecodeError {
                 reason: DecodeErrorReason::InvalidBencodexValue,
             })
