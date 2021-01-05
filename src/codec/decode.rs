@@ -501,6 +501,73 @@ mod tests {
         }
     }
 
+    mod decode_unicode_string_impl {
+        use super::super::*;
+
+        #[test]
+        fn should_return_error_with_insufficient_length_source() {
+            let expected_error = DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            };
+            assert_eq!(
+                expected_error,
+                decode_unicode_string_impl(&vec![b'u'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_unicode_string_impl(&vec![b'u', b'1'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_unicode_string_impl(&vec![b'u', b'2', b':', b'a'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_unicode_string_impl(&vec![b'u', b'k'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_unicode_string_impl(&vec![], 0).unwrap_err()
+            );
+        }
+
+        #[test]
+        fn should_return_unexpected_token_error_with_invalid_source() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'k',
+                        point: 2,
+                    }
+                },
+                decode_unicode_string_impl(&vec![b'u', b'1', b'k', b'a'], 0).unwrap_err()
+            );
+        }
+
+        #[test]
+        fn should_return_unexpected_token_error_with_negative_length_number() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'-',
+                        point: 1,
+                    }
+                },
+                decode_unicode_string_impl(&vec![b'u', b'-', b'1', b':', b'a'], 0).unwrap_err()
+            );
+        }
+
+        #[test]
+        fn should_return_error_with_invalid_source_having_invalid_unicode_string() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::InvalidBencodexValue
+                },
+                decode_unicode_string_impl(&vec![b'u', b'1', b':', 0x90], 0).unwrap_err()
+            );
+        }
+    }
+
     mod decode_error {
         mod display_impl {
             use super::super::super::*;
