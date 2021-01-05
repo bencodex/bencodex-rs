@@ -1,7 +1,8 @@
 on:
   push:
     tags:
-      - v*.*.*
+      - "*.*.*"
+
 name: Publish
 jobs:
   publish-crate:
