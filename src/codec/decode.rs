@@ -647,6 +647,33 @@ mod tests {
         }
     }
 
+    mod vec_u8 {
+        mod decode_impl {
+            mod decode {
+                use super::super::super::super::*;
+
+                #[test]
+                fn should_pass_error() {
+                    assert_eq!(
+                        DecodeError {
+                            reason: DecodeErrorReason::InvalidBencodexValue
+                        },
+                        vec![].decode().unwrap_err()
+                    );
+                    assert_eq!(
+                        DecodeError {
+                            reason: DecodeErrorReason::UnexpectedToken {
+                                token: b'_',
+                                point: 0,
+                            }
+                        },
+                        vec![b'_'].decode().unwrap_err()
+                    );
+                }
+            }
+        }
+    }
+
     mod decode_error {
         mod display_impl {
             use super::super::super::*;
