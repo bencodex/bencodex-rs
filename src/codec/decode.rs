@@ -267,6 +267,11 @@ fn decode_number_impl(
     start: usize,
 ) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
+    if vector.len() < start + tsize + 1 {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
     let (number, size) = match read_number(&vector[start + tsize..]) {
         None => {
             return Err(DecodeError {
@@ -280,6 +285,11 @@ fn decode_number_impl(
     };
     tsize += size;
 
+    if vector.len() < start + tsize + 1 {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
     if vector[start + tsize] != b'e' {
         Err(DecodeError {
             reason: DecodeErrorReason::UnexpectedToken {
