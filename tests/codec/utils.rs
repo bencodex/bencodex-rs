@@ -29,6 +29,7 @@ struct TestsuiteYamlLoader {
     doc_stack: Vec<(BencodexValue, usize)>,
 }
 
+#[cfg(not(tarpaulin_include))]
 impl MarkedEventReceiver for TestsuiteYamlLoader {
     fn on_event(&mut self, ev: Event, _: Marker) {
         match ev {
@@ -104,6 +105,7 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 impl TestsuiteYamlLoader {
     fn insert_new_node(&mut self, node: (BencodexValue, usize)) {
         if self.doc_stack.is_empty() {
@@ -146,6 +148,7 @@ impl TestsuiteYamlLoader {
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
     let files = fs::read_dir(SPEC_PATH)
         .unwrap()

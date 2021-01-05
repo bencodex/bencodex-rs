@@ -265,6 +265,7 @@ mod tests {
             }
         }
 
+        #[cfg(not(tarpaulin_include))]
         impl std::io::Write for ConditionFailWriter {
             fn write(&mut self, bytes: &[u8]) -> std::result::Result<usize, std::io::Error> {
                 self.call_count += 1;
