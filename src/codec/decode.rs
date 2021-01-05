@@ -173,6 +173,11 @@ fn decode_byte_string_impl(
     };
     tsize += size;
 
+    if vector.len() < start + tsize + 1 {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
     if vector[start + tsize] != b':' {
         return Err(DecodeError {
             reason: DecodeErrorReason::UnexpectedToken {
@@ -183,6 +188,11 @@ fn decode_byte_string_impl(
     };
     tsize += 1;
     let length_size = length.to_usize().unwrap();
+    if vector.len() < start + tsize + length_size {
+        return Err(DecodeError {
+            reason: DecodeErrorReason::InvalidBencodexValue,
+        });
+    }
     Ok((
         BencodexValue::Binary(vector[start + tsize..start + tsize + length_size].to_vec()),
         tsize + length_size,
