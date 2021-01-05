@@ -591,6 +591,52 @@ mod tests {
         }
     }
 
+    mod decode_number_impl {
+        use super::super::*;
+
+        #[test]
+        fn should_return_error_with_insufficient_length_source() {
+            let expected_error = DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            };
+            assert_eq!(
+                expected_error,
+                decode_number_impl(&vec![b'i'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_number_impl(&vec![b'i', b'2'], 0).unwrap_err()
+            );
+            assert_eq!(
+                expected_error,
+                decode_number_impl(&vec![b'i', b'-', b'2'], 0).unwrap_err()
+            );
+            assert_eq!(expected_error, decode_number_impl(&vec![], 0).unwrap_err());
+        }
+
+        #[test]
+        fn should_return_unexpected_token_error_with_invalid_source() {
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'a',
+                        point: 1,
+                    }
+                },
+                decode_number_impl(&vec![b'i', b'a', b'a'], 0).unwrap_err()
+            );
+            assert_eq!(
+                DecodeError {
+                    reason: DecodeErrorReason::UnexpectedToken {
+                        token: b'a',
+                        point: 2,
+                    }
+                },
+                decode_number_impl(&vec![b'i', b'1', b'a'], 0).unwrap_err()
+            );
+        }
+    }
+
     mod decode_error {
         mod display_impl {
             use super::super::super::*;
