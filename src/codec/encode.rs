@@ -330,6 +330,19 @@ mod tests {
             use super::*;
 
             #[test]
+            fn should_order_keys() {
+                let mut bvalue: BTreeMap<BencodexKey, BencodexValue> = BTreeMap::new();
+                bvalue.insert(BencodexKey::Text("ua".to_string()), BencodexValue::Null(()));
+                bvalue.insert(BencodexKey::Binary(vec![b'a']), BencodexValue::Null(()));
+                bvalue.insert(BencodexKey::Text("ub".to_string()), BencodexValue::Null(()));
+                bvalue.insert(BencodexKey::Binary(vec![b'b']), BencodexValue::Null(()));
+
+                let mut writer = Vec::new();
+                assert!(bvalue.to_owned().encode(&mut writer).is_ok());
+                assert_eq!(b"d1:an1:bnu2:uanu2:ubne".to_vec(), writer);
+            }
+
+            #[test]
             fn should_pass_error() {
                 let mut bvalue: BTreeMap<BencodexKey, BencodexValue> = BTreeMap::new();
                 bvalue.insert(BencodexKey::Text("".to_string()), BencodexValue::Null(()));
