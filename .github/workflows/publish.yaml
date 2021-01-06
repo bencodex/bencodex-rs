@@ -3,7 +3,7 @@ on:
     tags:
       - "*.*.*"
 
-name: Publish
+name: publish
 jobs:
   publish-crate:
     runs-on: ubuntu-20.04

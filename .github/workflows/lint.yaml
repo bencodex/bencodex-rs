@@ -1,5 +1,5 @@
 on: push
-name: Lint
+name: lint
 jobs:
   run-tests:
     runs-on: ubuntu-20.04
