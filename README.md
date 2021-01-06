@@ -1,6 +1,6 @@
 # bencodex-rs
 
-[![codecov](https://codecov.io/gh/moreal/bencodex-rs/branch/main/graph/badge.svg?token=H0FWUZ2ZF2)](https://codecov.io/gh/moreal/bencodex-rs)![Build](https://github.com/moreal/bencodex-rs/workflows/Build/badge.svg?branch=main)![Docs-rs](https://docs.rs/bencodex-rs/badge.svg)
+![Build](https://github.com/moreal/bencodex-rs/workflows/Build/badge.svg?branch=main) [![codecov](https://codecov.io/gh/moreal/bencodex-rs/branch/main/graph/badge.svg?token=H0FWUZ2ZF2)](https://codecov.io/gh/moreal/bencodex-rs) ![Docs-rs](https://docs.rs/bencodex-rs/badge.svg)
 
 The [Rust] implementation of [Bencodex].
 
