@@ -31,13 +31,10 @@ pub trait Encode {
 
 impl Encode for Vec<u8> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        match write!(writer, "{}:", self.len()) {
-            Ok(()) => match writer.write(&self) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            },
-            Err(e) => Err(e),
-        }
+        write!(writer, "{}:", self.len())?;
+        writer.write(&self)?;
+
+        Ok(())
     }
 }
 
@@ -50,41 +47,29 @@ impl Encode for i64 {
 impl Encode for String {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let bytes = self.into_bytes();
-        match write!(writer, "u{}:", bytes.len()) {
-            Ok(()) => match writer.write(&bytes) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            },
-            Err(e) => Err(e),
-        }
+        write!(writer, "u{}:", bytes.len())?;
+        writer.write(&bytes)?;
+
+        Ok(())
     }
 }
 
 impl Encode for bool {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        match writer.write(match self {
+        writer.write(match self {
             true => &[b't'],
             false => &[b'f'],
-        }) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        }
+        })?;
+
+        Ok(())
     }
 }
 
 impl Encode for BigInt {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        if let Err(e) = writer.write(&[b'i']) {
-            return Err(e);
-        }
-
-        if let Err(e) = writer.write(&self.to_str_radix(10).into_bytes()) {
-            return Err(e);
-        }
-
-        if let Err(e) = writer.write(&[b'e']) {
-            return Err(e);
-        }
+        writer.write(&[b'i'])?;
+        writer.write(&self.to_str_radix(10).into_bytes())?;
+        writer.write(&[b'e'])?;
 
         Ok(())
     }
@@ -92,19 +77,11 @@ impl Encode for BigInt {
 
 impl Encode for Vec<BencodexValue> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        if let Err(e) = writer.write(&[b'l']) {
-            return Err(e);
-        }
-
+        writer.write(&[b'l'])?;
         for el in self {
-            if let Err(e) = el.encode(writer) {
-                return Err(e);
-            }
+            el.encode(writer)?;
         }
-
-        if let Err(e) = writer.write(&[b'e']) {
-            return Err(e);
-        }
+        writer.write(&[b'e'])?;
 
         Ok(())
     }
@@ -112,28 +89,26 @@ impl Encode for Vec<BencodexValue> {
 
 impl Encode for () {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        match writer.write(&[b'n']) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        }
+        writer.write(&[b'n'])?;
+
+        Ok(())
     }
 }
 
 impl Encode for BencodexValue {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         // FIXME: rewrite more beautiful.
-        match match self {
-            BencodexValue::Binary(x) => x.encode(writer),
-            BencodexValue::Text(x) => x.encode(writer),
-            BencodexValue::Dictionary(x) => x.encode(writer),
-            BencodexValue::List(x) => x.encode(writer),
-            BencodexValue::Boolean(x) => x.encode(writer),
-            BencodexValue::Null(x) => x.encode(writer),
-            BencodexValue::Number(x) => x.encode(writer),
-        } {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
+        match self {
+            BencodexValue::Binary(x) => x.encode(writer)?,
+            BencodexValue::Text(x) => x.encode(writer)?,
+            BencodexValue::Dictionary(x) => x.encode(writer)?,
+            BencodexValue::List(x) => x.encode(writer)?,
+            BencodexValue::Boolean(x) => x.encode(writer)?,
+            BencodexValue::Null(x) => x.encode(writer)?,
+            BencodexValue::Number(x) => x.encode(writer)?,
         }
+
+        Ok(())
     }
 }
 
@@ -164,28 +139,17 @@ impl Encode for BTreeMap<BencodexKey, BencodexValue> {
             .into_iter()
             .sorted_by(|(x, _), (y, _)| compare_key(x, y));
 
-        if let Err(e) = writer.write(&[b'd']) {
-            return Err(e);
-        }
-
+        writer.write(&[b'd'])?;
         for (key, value) in pairs {
             let key = match key {
                 BencodexKey::Binary(x) => BencodexValue::Binary(x),
                 BencodexKey::Text(x) => BencodexValue::Text(x),
             };
 
-            if let Err(e) = key.encode(writer) {
-                return Err(e);
-            }
-
-            if let Err(e) = value.encode(writer) {
-                return Err(e);
-            }
+            key.encode(writer)?;
+            value.encode(writer)?;
         }
-
-        if let Err(e) = writer.write(&[b'e']) {
-            return Err(e);
-        }
+        writer.write(&[b'e'])?;
 
         Ok(())
     }
