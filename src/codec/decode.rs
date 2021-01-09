@@ -8,11 +8,11 @@ use std::result::Result;
 use std::str;
 use std::str::FromStr;
 
-/// The enum type which describes why [`DecodeError`] occurred.
+/// The error type which is returned from decoding a Bencodex value through [`Decode::decode`].
 #[derive(Debug, PartialEq)]
-pub enum DecodeErrorReason {
+pub enum DecodeError {
     /// This should be used when it failed to decode. In future, it will be separated more and more.
-    InvalidBencodexValue,
+    InvalidBencodexValueError,
     /// This should be used when it failed to decode because there is unexpected token appeared while decoding.
     ///
     /// # Example
@@ -20,29 +20,23 @@ pub enum DecodeErrorReason {
     /// For example, The encoded bytes of [`BencodexValue::Number`] are formed as 'i{}e' (e.g., 'i0e', 'i2147483647e'). If it is not satisified, it should be result through inside [`Err`].
     ///
     /// ```
-    /// use bencodex::{ Decode, DecodeError, DecodeErrorReason };
+    /// use bencodex::{ Decode, DecodeError };
     ///
     /// //                     v -- should be b'0' ~ b'9' digit.
     /// let vec = vec![b'i', b':', b'e'];
-    /// let error = vec.decode().unwrap_err().reason;
-    /// let expected_error = DecodeErrorReason::UnexpectedToken {
+    /// let error = vec.decode().unwrap_err();
+    /// let expected_error = DecodeError::UnexpectedTokenError {
     ///     token: b':',
     ///     point: 1,
     /// };
     /// assert_eq!(expected_error, error);
     /// ```
-    UnexpectedToken { token: u8, point: usize },
-}
-
-/// The error type which is returned from decoding a Bencodex value through [`Decode::decode`].
-#[derive(Debug, PartialEq)]
-pub struct DecodeError {
-    pub reason: DecodeErrorReason,
+    UnexpectedTokenError { token: u8, point: usize },
 }
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "DecodeError (reason: {:?})", self.reason)
+        write!(f, "{:?}", self)
     }
 }
 
@@ -54,7 +48,7 @@ impl Error for DecodeError {}
 pub trait Decode {
     /// Decodes a [Bencodex] value to return from this type.
     ///
-    /// If decoding succeeds, return the value inside [`Ok`]. Otherwise, return the [`DecodeError`] with [`DecodeErrorReason`] inside [`Err`].
+    /// If decoding succeeds, return the value inside [`Ok`]. Otherwise, return the [`DecodeError`] inside [`Err`].
     ///
     /// # Examples
     /// Basic usage with [`Vec<u8>`], the default implementor which implements `Decode`.
@@ -78,9 +72,7 @@ impl ShouldNotBeNone<u8> for Option<&u8> {
     #[inline]
     fn should_not_be_none(self) -> Result<u8, DecodeError> {
         match self {
-            None => Err(DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            }),
+            None => Err(DecodeError::InvalidBencodexValueError),
             Some(v) => Ok(*v),
         }
     }
@@ -94,11 +86,9 @@ impl Expect<u8> for u8 {
     #[inline]
     fn expect(self, expected: u8, point: usize) -> Result<(), DecodeError> {
         if self != expected {
-            Err(DecodeError {
-                reason: DecodeErrorReason::UnexpectedToken {
-                    token: self,
-                    point: point,
-                },
+            Err(DecodeError::UnexpectedTokenError {
+                token: self,
+                point: point,
             })
         } else {
             Ok(())
@@ -108,9 +98,7 @@ impl Expect<u8> for u8 {
 
 fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     if start >= vector.len() {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
+        return Err(DecodeError::InvalidBencodexValueError);
     }
 
     match vector[start] {
@@ -122,11 +110,9 @@ fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize),
         b't' => Ok((BencodexValue::Boolean(true), 1)),
         b'f' => Ok((BencodexValue::Boolean(false), 1)),
         b'n' => Ok((BencodexValue::Null(()), 1)),
-        _ => Err(DecodeError {
-            reason: DecodeErrorReason::UnexpectedToken {
-                token: vector[start],
-                point: start,
-            },
+        _ => Err(DecodeError::UnexpectedTokenError {
+            token: vector[start],
+            point: start,
         }),
     }
 }
@@ -146,11 +132,7 @@ fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, us
         let key = match value {
             BencodexValue::Text(s) => BencodexKey::Text(s),
             BencodexValue::Binary(b) => BencodexKey::Binary(b),
-            _ => {
-                return Err(DecodeError {
-                    reason: DecodeErrorReason::InvalidBencodexValue,
-                })
-            }
+            _ => return Err(DecodeError::InvalidBencodexValueError),
         };
         tsize += size;
         index = start + tsize;
@@ -206,11 +188,7 @@ fn decode_byte_string_impl(
 ) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 0;
     let (length, size) = match read_number(&vector[start + tsize..]) {
-        None => {
-            return Err(DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            })
-        }
+        None => return Err(DecodeError::InvalidBencodexValueError),
         Some(v) => v,
     };
     tsize += size;
@@ -223,9 +201,7 @@ fn decode_byte_string_impl(
     tsize += 1;
     let length_size = length.to_usize().unwrap();
     if vector.len() < start + tsize + length_size {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
+        return Err(DecodeError::InvalidBencodexValueError);
     }
     Ok((
         BencodexValue::Binary(vector[start + tsize..start + tsize + length_size].to_vec()),
@@ -245,24 +221,16 @@ fn decode_unicode_string_impl(
 
     let mut tsize: usize = 1;
     if vector.len() < start + tsize + 1 {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
+        return Err(DecodeError::InvalidBencodexValueError);
     }
     let (length, size) = match read_number(&vector[start + tsize..]) {
-        None => {
-            return Err(DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            })
-        }
+        None => return Err(DecodeError::InvalidBencodexValueError),
         Some(v) => v,
     };
     if length < BigInt::from(0) {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::UnexpectedToken {
-                token: vector[start + tsize],
-                point: start + tsize,
-            },
+        return Err(DecodeError::UnexpectedTokenError {
+            token: vector[start + tsize],
+            point: start + tsize,
         });
     }
     tsize += size;
@@ -276,17 +244,11 @@ fn decode_unicode_string_impl(
 
     let length_size = length.to_usize().unwrap();
     if vector.len() < start + tsize + length_size {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
+        return Err(DecodeError::InvalidBencodexValueError);
     }
     let text = match str::from_utf8(&vector[start + tsize..start + tsize + length_size]) {
         Ok(v) => v,
-        Err(_) => {
-            return Err(DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            })
-        }
+        Err(_) => return Err(DecodeError::InvalidBencodexValueError),
     };
     tsize += length_size;
     Ok((BencodexValue::Text(text.to_string()), tsize))
@@ -299,17 +261,13 @@ fn decode_number_impl(
 ) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
     if vector.len() < start + tsize + 1 {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
+        return Err(DecodeError::InvalidBencodexValueError);
     }
     let (number, size) = match read_number(&vector[start + tsize..]) {
         None => {
-            return Err(DecodeError {
-                reason: DecodeErrorReason::UnexpectedToken {
-                    token: vector[start + tsize],
-                    point: start + tsize,
-                },
+            return Err(DecodeError::UnexpectedTokenError {
+                token: vector[start + tsize],
+                point: start + tsize,
             })
         }
         Some(v) => v,
@@ -369,9 +327,7 @@ mod tests {
 
         #[test]
         fn should_return_error_with_overflowed_start() {
-            let expected_error = DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            };
+            let expected_error = DecodeError::InvalidBencodexValueError;
             assert_eq!(expected_error, decode_impl(&vec![], 1).unwrap_err());
             assert_eq!(
                 expected_error,
@@ -386,20 +342,16 @@ mod tests {
         #[test]
         fn should_return_unexpected_token_error_with_invalid_source() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'x',
-                        point: 0,
-                    }
+                DecodeError::UnexpectedTokenError {
+                    token: b'x',
+                    point: 0,
                 },
                 decode_impl(&vec![b'x'], 0).unwrap_err()
             );
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'k',
-                        point: 4,
-                    }
+                DecodeError::UnexpectedTokenError {
+                    token: b'k',
+                    point: 4,
                 },
                 decode_impl(&vec![b'x', b'y', b'z', b'o', b'k'], 4).unwrap_err()
             );
@@ -411,9 +363,7 @@ mod tests {
 
         #[test]
         fn should_return_error_with_insufficient_length_source() {
-            let expected_error = DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            };
+            let expected_error = DecodeError::InvalidBencodexValueError;
             assert_eq!(
                 expected_error,
                 decode_dict_impl(&vec![b'd'], 0).unwrap_err()
@@ -427,9 +377,7 @@ mod tests {
 
         #[test]
         fn should_return_error_with_source_having_incorrect_key() {
-            let expected_error = DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            };
+            let expected_error = DecodeError::InvalidBencodexValueError;
             // { 0: null }
             assert_eq!(
                 expected_error,
@@ -460,20 +408,16 @@ mod tests {
         #[test]
         fn should_pass_error() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'k',
-                        point: 1,
-                    },
+                DecodeError::UnexpectedTokenError {
+                    token: b'k',
+                    point: 1,
                 },
                 decode_dict_impl(&vec![b'd', b'k', b'n', b'e'], 0).unwrap_err()
             );
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'k',
-                        point: 4,
-                    },
+                DecodeError::UnexpectedTokenError {
+                    token: b'k',
+                    point: 4,
                 },
                 decode_dict_impl(&vec![b'd', b'1', b':', b'a', b'k', b'e'], 0).unwrap_err()
             );
@@ -485,9 +429,7 @@ mod tests {
 
         #[test]
         fn should_return_error_with_insufficient_length_source() {
-            let expected_error = DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            };
+            let expected_error = DecodeError::InvalidBencodexValueError;
             assert_eq!(
                 expected_error,
                 decode_list_impl(&vec![b'l'], 0).unwrap_err()
@@ -502,11 +444,9 @@ mod tests {
         #[test]
         fn should_pass_error() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'k',
-                        point: 1,
-                    },
+                DecodeError::UnexpectedTokenError {
+                    token: b'k',
+                    point: 1,
                 },
                 decode_list_impl(&vec![b'l', b'k', b'e'], 0).unwrap_err()
             );
@@ -518,9 +458,7 @@ mod tests {
 
         #[test]
         fn should_return_error_with_insufficient_length_source() {
-            let expected_error = DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            };
+            let expected_error = DecodeError::InvalidBencodexValueError;
             assert_eq!(
                 expected_error,
                 decode_byte_string_impl(&vec![b'1'], 0).unwrap_err()
@@ -542,11 +480,9 @@ mod tests {
         #[test]
         fn should_return_unexpected_token_error_with_invalid_source() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'k',
-                        point: 1,
-                    }
+                DecodeError::UnexpectedTokenError {
+                    token: b'k',
+                    point: 1,
                 },
                 decode_byte_string_impl(&vec![b'1', b'k', b'a'], 0).unwrap_err()
             );
@@ -558,9 +494,7 @@ mod tests {
 
         #[test]
         fn should_return_error_with_insufficient_length_source() {
-            let expected_error = DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            };
+            let expected_error = DecodeError::InvalidBencodexValueError;
             assert_eq!(
                 expected_error,
                 decode_unicode_string_impl(&vec![b'u'], 0).unwrap_err()
@@ -586,11 +520,9 @@ mod tests {
         #[test]
         fn should_return_unexpected_token_error_with_invalid_source() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'k',
-                        point: 2,
-                    }
+                DecodeError::UnexpectedTokenError {
+                    token: b'k',
+                    point: 2
                 },
                 decode_unicode_string_impl(&vec![b'u', b'1', b'k', b'a'], 0).unwrap_err()
             );
@@ -599,11 +531,9 @@ mod tests {
         #[test]
         fn should_return_unexpected_token_error_with_negative_length_number() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'-',
-                        point: 1,
-                    }
+                DecodeError::UnexpectedTokenError {
+                    token: b'-',
+                    point: 1,
                 },
                 decode_unicode_string_impl(&vec![b'u', b'-', b'1', b':', b'a'], 0).unwrap_err()
             );
@@ -612,9 +542,7 @@ mod tests {
         #[test]
         fn should_return_error_with_invalid_source_having_invalid_unicode_string() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::InvalidBencodexValue
-                },
+                DecodeError::InvalidBencodexValueError,
                 decode_unicode_string_impl(&vec![b'u', b'1', b':', 0x90], 0).unwrap_err()
             );
         }
@@ -625,9 +553,7 @@ mod tests {
 
         #[test]
         fn should_return_error_with_insufficient_length_source() {
-            let expected_error = DecodeError {
-                reason: DecodeErrorReason::InvalidBencodexValue,
-            };
+            let expected_error = DecodeError::InvalidBencodexValueError;
             assert_eq!(
                 expected_error,
                 decode_number_impl(&vec![b'i'], 0).unwrap_err()
@@ -646,20 +572,16 @@ mod tests {
         #[test]
         fn should_return_unexpected_token_error_with_invalid_source() {
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'a',
-                        point: 1,
-                    }
+                DecodeError::UnexpectedTokenError {
+                    token: b'a',
+                    point: 1,
                 },
                 decode_number_impl(&vec![b'i', b'a', b'a'], 0).unwrap_err()
             );
             assert_eq!(
-                DecodeError {
-                    reason: DecodeErrorReason::UnexpectedToken {
-                        token: b'a',
-                        point: 2,
-                    }
+                DecodeError::UnexpectedTokenError {
+                    token: b'a',
+                    point: 2,
                 },
                 decode_number_impl(&vec![b'i', b'1', b'a'], 0).unwrap_err()
             );
@@ -674,17 +596,13 @@ mod tests {
                 #[test]
                 fn should_pass_error() {
                     assert_eq!(
-                        DecodeError {
-                            reason: DecodeErrorReason::InvalidBencodexValue
-                        },
+                        DecodeError::InvalidBencodexValueError,
                         vec![].decode().unwrap_err()
                     );
                     assert_eq!(
-                        DecodeError {
-                            reason: DecodeErrorReason::UnexpectedToken {
-                                token: b'_',
-                                point: 0,
-                            }
+                        DecodeError::UnexpectedTokenError {
+                            token: b'_',
+                            point: 0,
                         },
                         vec![b'_'].decode().unwrap_err()
                     );
@@ -696,20 +614,18 @@ mod tests {
     mod u8 {
         mod expect_impl {
             mod expect {
-                use super::super::super::super::{DecodeErrorReason, Expect};
+                use super::super::super::super::{DecodeError, Expect};
 
                 #[test]
                 fn should_return_unexpected_token_error() {
                     let decode_error = b'a'.expect(b'u', 12).unwrap_err();
-                    if let DecodeErrorReason::UnexpectedToken { token, point } = decode_error.reason
-                    {
+                    if let DecodeError::UnexpectedTokenError { token, point } = decode_error {
                         assert_eq!(b'a', token);
                         assert_eq!(12, point);
                     }
 
                     let decode_error = b'x'.expect(b'u', 100).unwrap_err();
-                    if let DecodeErrorReason::UnexpectedToken { token, point } = decode_error.reason
-                    {
+                    if let DecodeError::UnexpectedTokenError { token, point } = decode_error {
                         assert_eq!(b'x', token);
                         assert_eq!(100, point);
                     }
@@ -725,11 +641,8 @@ mod tests {
             #[test]
             fn fmt() {
                 assert_eq!(
-                    "DecodeError (reason: InvalidBencodexValue)",
-                    DecodeError {
-                        reason: DecodeErrorReason::InvalidBencodexValue
-                    }
-                    .to_string()
+                    "InvalidBencodexValueError",
+                    DecodeError::InvalidBencodexValueError.to_string()
                 )
             }
         }
