@@ -70,6 +70,42 @@ pub trait Decode {
     fn decode(self) -> Result<BencodexValue, DecodeError>;
 }
 
+trait ShouldNotBeNone<T> {
+    fn should_not_be_none(self) -> Result<T, DecodeError>;
+}
+
+impl ShouldNotBeNone<u8> for Option<&u8> {
+    #[inline]
+    fn should_not_be_none(self) -> Result<u8, DecodeError> {
+        match self {
+            None => Err(DecodeError {
+                reason: DecodeErrorReason::InvalidBencodexValue,
+            }),
+            Some(v) => Ok(*v),
+        }
+    }
+}
+
+trait Expect<T> {
+    fn expect(self, expected: u8, point: usize) -> Result<(), DecodeError>;
+}
+
+impl Expect<u8> for u8 {
+    #[inline]
+    fn expect(self, expected: u8, point: usize) -> Result<(), DecodeError> {
+        if self != expected {
+            Err(DecodeError {
+                reason: DecodeErrorReason::UnexpectedToken {
+                    token: self,
+                    point: point,
+                },
+            })
+        } else {
+            Ok(())
+        }
+    }
+}
+
 fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     if start >= vector.len() {
         return Err(DecodeError {
@@ -97,21 +133,16 @@ fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize),
 
 // start must be on 'd'
 fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
-    if vector.len() < start + 2 {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
-    }
+    vector
+        .get(start)
+        .should_not_be_none()?
+        .expect(b'd', start)?;
 
     let mut tsize: usize = 1;
+    let mut index = start + tsize;
     let mut map = BTreeMap::new();
-    while vector[start + tsize] != b'e' {
-        let index = start + tsize;
-        let (value, size) = match decode_impl(vector, index) {
-            Ok(v) => v,
-            Err(e) => return Err(e),
-        };
-        tsize += size;
+    while vector.get(index).should_not_be_none()? != b'e' {
+        let (value, size) = decode_impl(vector, index)?;
         let key = match value {
             BencodexValue::Text(s) => BencodexKey::Text(s),
             BencodexValue::Binary(b) => BencodexKey::Binary(b),
@@ -121,41 +152,52 @@ fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, us
                 })
             }
         };
-        let index = start + tsize;
-        let (value, size) = match decode_impl(vector, index) {
-            Ok(v) => v,
-            Err(e) => return Err(e),
-        };
         tsize += size;
+        index = start + tsize;
+        let (value, size) = decode_impl(vector, index)?;
+
         match map.insert(key, value) {
             None => (),
             Some(_) => todo!(),
         };
+        tsize += size;
+        index = start + tsize;
     }
-    Ok((BencodexValue::Dictionary(map), tsize + 1))
+
+    vector
+        .get(index)
+        .should_not_be_none()?
+        .expect(b'e', index)?;
+    tsize += 1;
+
+    Ok((BencodexValue::Dictionary(map), tsize))
 }
 
 // start must be on 'l'
 fn decode_list_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
-    if vector.len() < start + 2 {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
-    }
+    vector
+        .get(start)
+        .should_not_be_none()?
+        .expect(b'l', start)?;
 
     let mut tsize: usize = 1;
     let mut list = Vec::new();
-    while start + tsize < vector.len() && vector[start + tsize] != b'e' {
-        let index = start + tsize;
-        let (value, size) = match decode_impl(vector, index) {
-            Ok(v) => v,
-            Err(e) => return Err(e),
-        };
-        tsize += size;
+    let mut index = start + tsize;
+    while vector.get(index).should_not_be_none()? != b'e' {
+        let (value, size) = decode_impl(vector, index)?;
         list.push(value);
+        tsize += size;
+        index = start + tsize
     }
 
-    Ok((BencodexValue::List(list), tsize + 1))
+    index = start + tsize;
+    vector
+        .get(index)
+        .should_not_be_none()?
+        .expect(b'e', index)?;
+    tsize += 1;
+
+    Ok((BencodexValue::List(list), tsize))
 }
 
 fn decode_byte_string_impl(
@@ -173,19 +215,11 @@ fn decode_byte_string_impl(
     };
     tsize += size;
 
-    if vector.len() < start + tsize + 1 {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
-    }
-    if vector[start + tsize] != b':' {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::UnexpectedToken {
-                token: vector[start + tsize],
-                point: start + tsize,
-            },
-        });
-    };
+    let index = start + tsize;
+    vector
+        .get(index)
+        .should_not_be_none()?
+        .expect(b':', index)?;
     tsize += 1;
     let length_size = length.to_usize().unwrap();
     if vector.len() < start + tsize + length_size {
@@ -204,6 +238,11 @@ fn decode_unicode_string_impl(
     vector: &Vec<u8>,
     start: usize,
 ) -> Result<(BencodexValue, usize), DecodeError> {
+    vector
+        .get(start)
+        .should_not_be_none()?
+        .expect(b'u', start)?;
+
     let mut tsize: usize = 1;
     if vector.len() < start + tsize + 1 {
         return Err(DecodeError {
@@ -228,21 +267,13 @@ fn decode_unicode_string_impl(
     }
     tsize += size;
 
-    if vector.len() < start + tsize + 1 {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
-    }
-    if vector[start + tsize] != b':' {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::UnexpectedToken {
-                token: vector[start + tsize],
-                point: start + tsize,
-            },
-        });
-    };
-
+    let index = start + tsize;
+    vector
+        .get(index)
+        .should_not_be_none()?
+        .expect(b':', index)?;
     tsize += 1;
+
     let length_size = length.to_usize().unwrap();
     if vector.len() < start + tsize + length_size {
         return Err(DecodeError {
@@ -285,22 +316,13 @@ fn decode_number_impl(
     };
     tsize += size;
 
-    if vector.len() < start + tsize + 1 {
-        return Err(DecodeError {
-            reason: DecodeErrorReason::InvalidBencodexValue,
-        });
-    }
-    if vector[start + tsize] != b'e' {
-        Err(DecodeError {
-            reason: DecodeErrorReason::UnexpectedToken {
-                token: vector[start + tsize],
-                point: start + tsize,
-            },
-        })
-    } else {
-        tsize += 1;
-        Ok((BencodexValue::Number(number), tsize))
-    }
+    let index = start + tsize;
+    vector
+        .get(index)
+        .should_not_be_none()?
+        .expect(b'e', index)?;
+    tsize += 1;
+    Ok((BencodexValue::Number(number), tsize))
 }
 
 fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
@@ -336,10 +358,7 @@ fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
 
 impl Decode for Vec<u8> {
     fn decode(self) -> Result<BencodexValue, DecodeError> {
-        match decode_impl(&self, 0) {
-            Ok(v) => Ok(v.0),
-            Err(e) => Err(e),
-        }
+        Ok(decode_impl(&self, 0)?.0)
     }
 }
 
