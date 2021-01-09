@@ -693,6 +693,31 @@ mod tests {
         }
     }
 
+    mod u8 {
+        mod expect_impl {
+            mod expect {
+                use super::super::super::super::{DecodeErrorReason, Expect};
+
+                #[test]
+                fn should_return_unexpected_token_error() {
+                    let decode_error = b'a'.expect(b'u', 12).unwrap_err();
+                    if let DecodeErrorReason::UnexpectedToken { token, point } = decode_error.reason
+                    {
+                        assert_eq!(b'a', token);
+                        assert_eq!(12, point);
+                    }
+
+                    let decode_error = b'x'.expect(b'u', 100).unwrap_err();
+                    if let DecodeErrorReason::UnexpectedToken { token, point } = decode_error.reason
+                    {
+                        assert_eq!(b'x', token);
+                        assert_eq!(100, point);
+                    }
+                }
+            }
+        }
+    }
+
     mod decode_error {
         mod display_impl {
             use super::super::super::*;
