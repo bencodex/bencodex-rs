@@ -86,10 +86,7 @@ impl Expect<u8> for u8 {
     #[inline]
     fn expect(self, expected: u8, point: usize) -> Result<(), DecodeError> {
         if self != expected {
-            Err(DecodeError::UnexpectedTokenError {
-                token: self,
-                point,
-            })
+            Err(DecodeError::UnexpectedTokenError { token: self, point })
         } else {
             Ok(())
         }
@@ -255,10 +252,7 @@ fn decode_unicode_string_impl(
 }
 
 // start must be on 'i'
-fn decode_number_impl(
-    vector: &[u8],
-    start: usize,
-) -> Result<(BencodexValue, usize), DecodeError> {
+fn decode_number_impl(vector: &[u8], start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
     if vector.len() < start + tsize + 1 {
         return Err(DecodeError::InvalidBencodexValueError);
