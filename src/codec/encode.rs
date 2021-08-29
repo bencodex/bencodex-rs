@@ -265,6 +265,15 @@ mod tests {
                 }
             }
 
+            fn write_all(&mut self, _: &[u8]) -> std::result::Result<(), std::io::Error> {
+                self.call_count += 1;
+                if self.throw_counts.contains(&self.call_count) {
+                    Err(std::io::Error::new(std::io::ErrorKind::Other, ""))
+                } else {
+                    Ok(())
+                }
+            }
+
             fn flush(&mut self) -> std::result::Result<(), std::io::Error> {
                 Ok(())
             }
