@@ -88,7 +88,7 @@ impl Expect<u8> for u8 {
         if self != expected {
             Err(DecodeError::UnexpectedTokenError {
                 token: self,
-                point: point,
+                point,
             })
         } else {
             Ok(())
@@ -96,7 +96,7 @@ impl Expect<u8> for u8 {
     }
 }
 
-fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
+fn decode_impl(vector: &[u8], start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     if start >= vector.len() {
         return Err(DecodeError::InvalidBencodexValueError);
     }
@@ -118,7 +118,7 @@ fn decode_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize),
 }
 
 // start must be on 'd'
-fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
+fn decode_dict_impl(vector: &[u8], start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     vector
         .get(start)
         .should_not_be_none()?
@@ -156,7 +156,7 @@ fn decode_dict_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, us
 }
 
 // start must be on 'l'
-fn decode_list_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, usize), DecodeError> {
+fn decode_list_impl(vector: &[u8], start: usize) -> Result<(BencodexValue, usize), DecodeError> {
     vector
         .get(start)
         .should_not_be_none()?
@@ -183,7 +183,7 @@ fn decode_list_impl(vector: &Vec<u8>, start: usize) -> Result<(BencodexValue, us
 }
 
 fn decode_byte_string_impl(
-    vector: &Vec<u8>,
+    vector: &[u8],
     start: usize,
 ) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 0;
@@ -211,7 +211,7 @@ fn decode_byte_string_impl(
 
 // start must be on 'u'
 fn decode_unicode_string_impl(
-    vector: &Vec<u8>,
+    vector: &[u8],
     start: usize,
 ) -> Result<(BencodexValue, usize), DecodeError> {
     vector
@@ -256,7 +256,7 @@ fn decode_unicode_string_impl(
 
 // start must be on 'i'
 fn decode_number_impl(
-    vector: &Vec<u8>,
+    vector: &[u8],
     start: usize,
 ) -> Result<(BencodexValue, usize), DecodeError> {
     let mut tsize: usize = 1;
@@ -284,7 +284,7 @@ fn decode_number_impl(
 }
 
 fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
-    if s.len() == 0 {
+    if s.is_empty() {
         return None;
     }
 

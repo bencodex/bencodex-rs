@@ -32,7 +32,7 @@ pub trait Encode {
 impl Encode for Vec<u8> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         write!(writer, "{}:", self.len())?;
-        writer.write(&self)?;
+        writer.write_all(&self)?;
 
         Ok(())
     }
@@ -48,7 +48,7 @@ impl Encode for String {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let bytes = self.into_bytes();
         write!(writer, "u{}:", bytes.len())?;
-        writer.write(&bytes)?;
+        writer.write_all(&bytes)?;
 
         Ok(())
     }
@@ -56,7 +56,7 @@ impl Encode for String {
 
 impl Encode for bool {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        writer.write(match self {
+        writer.write_all(match self {
             true => &[b't'],
             false => &[b'f'],
         })?;
@@ -67,9 +67,9 @@ impl Encode for bool {
 
 impl Encode for BigInt {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        writer.write(&[b'i'])?;
-        writer.write(&self.to_str_radix(10).into_bytes())?;
-        writer.write(&[b'e'])?;
+        writer.write_all(&[b'i'])?;
+        writer.write_all(&self.to_str_radix(10).into_bytes())?;
+        writer.write_all(&[b'e'])?;
 
         Ok(())
     }
@@ -77,11 +77,11 @@ impl Encode for BigInt {
 
 impl Encode for Vec<BencodexValue> {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        writer.write(&[b'l'])?;
+        writer.write_all(&[b'l'])?;
         for el in self {
             el.encode(writer)?;
         }
-        writer.write(&[b'e'])?;
+        writer.write_all(&[b'e'])?;
 
         Ok(())
     }
@@ -89,7 +89,7 @@ impl Encode for Vec<BencodexValue> {
 
 impl Encode for () {
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        writer.write(&[b'n'])?;
+        writer.write_all(&[b'n'])?;
 
         Ok(())
     }
@@ -114,7 +114,7 @@ impl Encode for BencodexValue {
 
 fn compare_vector<T: Ord>(xs: &[T], ys: &[T]) -> Ordering {
     for (x, y) in xs.iter().zip(ys) {
-        match x.cmp(&y) {
+        match x.cmp(y) {
             Ordering::Equal => continue,
             Ordering::Greater => return Ordering::Greater,
             Ordering::Less => return Ordering::Less,
@@ -139,7 +139,7 @@ impl Encode for BTreeMap<BencodexKey, BencodexValue> {
             .into_iter()
             .sorted_by(|(x, _), (y, _)| compare_key(x, y));
 
-        writer.write(&[b'd'])?;
+        writer.write_all(&[b'd'])?;
         for (key, value) in pairs {
             let key = match key {
                 BencodexKey::Binary(x) => BencodexValue::Binary(x),
@@ -149,7 +149,7 @@ impl Encode for BTreeMap<BencodexKey, BencodexValue> {
             key.encode(writer)?;
             value.encode(writer)?;
         }
-        writer.write(&[b'e'])?;
+        writer.write_all(&[b'e'])?;
 
         Ok(())
     }
