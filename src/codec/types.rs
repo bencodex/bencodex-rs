@@ -18,59 +18,59 @@ pub enum BencodexKey {
     Text(String),
 }
 
-impl Into<BencodexKey> for &str {
-    fn into(self) -> BencodexKey {
-        BencodexKey::Text(self.to_string())
+impl From<&str> for BencodexKey {
+    fn from(val: &str) -> Self {
+        BencodexKey::Text(val.to_string())
     }
 }
 
-impl Into<BencodexKey> for String {
-    fn into(self) -> BencodexKey {
-        BencodexKey::Text(self)
+impl From<String> for BencodexKey {
+    fn from(val: String) -> Self {
+        BencodexKey::Text(val)
     }
 }
 
-impl Into<BencodexKey> for Vec<u8> {
-    fn into(self) -> BencodexKey {
-        BencodexKey::Binary(self)
+impl From<Vec<u8>> for BencodexKey {
+    fn from(val: Vec<u8>) -> Self {
+        BencodexKey::Binary(val)
     }
 }
 
-impl Into<BencodexKey> for &[u8] {
-    fn into(self) -> BencodexKey {
-        BencodexKey::Binary(self.to_vec())
+impl From<&[u8]> for BencodexKey {
+    fn from(val: &[u8]) -> Self {
+        BencodexKey::Binary(val.to_vec())
     }
 }
 
-impl Into<BencodexValue> for &[u8] {
-    fn into(self) -> BencodexValue {
-        BencodexValue::Binary(self.to_vec())
+impl From<&[u8]> for BencodexValue {
+    fn from(val: &[u8]) -> Self {
+        BencodexValue::Binary(val.to_vec())
     }
 }
 
-impl Into<BencodexValue> for Vec<u8> {
-    fn into(self) -> BencodexValue {
-        BencodexValue::Binary(self)
+impl From<Vec<u8>> for BencodexValue {
+    fn from(val: Vec<u8>) -> Self {
+        BencodexValue::Binary(val)
     }
 }
 
-impl Into<BencodexValue> for &str {
-    fn into(self) -> BencodexValue {
-        BencodexValue::Text(self.to_string())
+impl From<&str> for BencodexValue {
+    fn from(val: &str) -> Self {
+        BencodexValue::Text(val.to_string())
     }
 }
 
-impl Into<BencodexValue> for String {
-    fn into(self) -> BencodexValue {
-        BencodexValue::Text(self)
+impl From<String> for BencodexValue {
+    fn from(val: String) -> Self {
+        BencodexValue::Text(val)
     }
 }
 
 macro_rules! bencodex_value_number_impl {
     ($x:tt) => {
-        impl Into<BencodexValue> for $x {
-            fn into(self) -> BencodexValue {
-                BencodexValue::Number(self.into())
+        impl From<$x> for BencodexValue {
+            fn from(val: $x) -> Self {
+                BencodexValue::Number(val.into())
             }
         }
     };
@@ -84,19 +84,19 @@ bencodex_value_number_impl!(i16);
 bencodex_value_number_impl!(i32);
 bencodex_value_number_impl!(i64);
 
-impl Into<BencodexValue> for bool {
-    fn into(self) -> BencodexValue {
-        BencodexValue::Boolean(self)
+impl From<bool> for BencodexValue {
+    fn from(val: bool) -> Self {
+        BencodexValue::Boolean(val)
     }
 }
 
-impl<T> Into<BencodexValue> for Vec<T>
+impl<T> From<Vec<T>> for BencodexValue
 where
     T: Into<BencodexValue>,
 {
-    fn into(self) -> BencodexValue {
+    fn from(val: Vec<T>) -> Self {
         let mut vec = Vec::new();
-        for v in self {
+        for v in val {
             vec.push(v.into());
         }
 
@@ -104,14 +104,14 @@ where
     }
 }
 
-impl<T, U> Into<BencodexValue> for BTreeMap<T, U>
+impl<T, U> From<BTreeMap<T, U>> for BencodexValue
 where
     T: Into<BencodexKey>,
     U: Into<BencodexValue>,
 {
-    fn into(self) -> BencodexValue {
+    fn from(val: BTreeMap<T, U>) -> Self {
         let mut map = BTreeMap::<BencodexKey, BencodexValue>::new();
-        for (key, value) in self {
+        for (key, value) in val {
             map.insert(key.into(), value.into());
         }
 
@@ -119,9 +119,9 @@ where
     }
 }
 
-impl Into<BencodexValue> for () {
-    fn into(self) -> BencodexValue {
-        BencodexValue::Null(self)
+impl From<()> for BencodexValue {
+    fn from(val: ()) -> Self {
+        BencodexValue::Null(val)
     }
 }
 
