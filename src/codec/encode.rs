@@ -19,7 +19,7 @@ pub trait Encode {
     /// ```
     /// use bencodex::{ Encode, BencodexValue };
     ///
-    /// let text = BencodexValue::Text("text".to_string());
+    /// let text = "text".to_string();
     /// let mut vec = Vec::new();
     /// text.encode(&mut vec);
     ///
