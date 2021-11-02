@@ -1,14 +1,53 @@
 use num_bigint::BigInt;
 use std::collections::BTreeMap;
 
+/// The type alias of `BTreepMap<BencodexKey, BencodexValue>` to reduce code size.
+///
+/// ```
+/// use bencodex::{ Encode, BencodexDictionary };
+///
+/// let mut dict = BencodexDictionary::new();
+/// dict.insert("foo".into(), "bar".into());
+///
+/// let mut buf = vec![];
+/// dict.encode(&mut buf);
+/// assert_eq!(buf, b"du3:foou3:bare")
+/// ```
+pub type BencodexDictionary = BTreeMap<BencodexKey, BencodexValue>;
+/// The type alias of `Vec<BencodexValue>` to reduce code size.
+///
+/// ```
+/// use bencodex::{ Encode, BencodexList };
+///
+/// let mut list = BencodexList::new();
+/// list.push("foo".to_string().into());
+/// list.push("bar".to_string().into());
+///
+/// let mut buf = vec![];
+/// list.encode(&mut buf);
+/// assert_eq!(buf, b"lu3:foou3:bare")
+/// ```
+pub type BencodexList = Vec<BencodexValue>;
+
+/// The constant of `BencodexValue::Null`.
+///
+/// ```
+/// use bencodex::{ Encode, BENCODEX_NULL };
+///
+/// let mut buf = vec![];
+/// BENCODEX_NULL.encode(&mut buf);
+/// assert_eq!(buf, b"n")
+/// ```
+pub const BENCODEX_NULL: BencodexValue = BencodexValue::Null(());
+
 #[derive(PartialEq, Debug, Clone)]
 pub enum BencodexValue {
     Binary(Vec<u8>),
     Text(String),
     Boolean(bool),
     Number(BigInt),
-    List(Vec<BencodexValue>),
-    Dictionary(BTreeMap<BencodexKey, BencodexValue>),
+    List(BencodexList),
+    Dictionary(BencodexDictionary),
     Null(()),
 }
 
