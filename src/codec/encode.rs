@@ -30,6 +30,13 @@ pub trait Encode {
 }
 
 impl Encode for Vec<u8> {
+    /// ```
+    /// use bencodex::{ Encode };
+    ///
+    /// let mut buf = vec![];
+    /// b"hello".to_vec().encode(&mut buf);
+    /// assert_eq!(buf, b"5:hello");
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         write!(writer, "{}:", self.len())?;
         writer.write_all(&self)?;
@@ -39,12 +46,26 @@ impl Encode for Vec<u8> {
 }
 
 impl Encode for i64 {
+    /// ```
+    /// use bencodex::{ Encode };
+    ///
+    /// let mut buf = vec![];
+    /// 1004i64.encode(&mut buf);
+    /// assert_eq!(buf, b"i1004e");
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         write!(writer, "i{}e", self)
     }
 }
 
 impl Encode for String {
+    /// ```
+    /// use bencodex::{ Encode };
+    ///
+    /// let mut buf = vec![];
+    /// "foo".to_string().encode(&mut buf);
+    /// assert_eq!(buf, b"u3:foo");
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let bytes = self.into_bytes();
         write!(writer, "u{}:", bytes.len())?;
@@ -55,6 +76,13 @@ impl Encode for String {
 }
 
 impl Encode for bool {
+    /// ```
+    /// use bencodex::{ Encode };
+    ///
+    /// let mut buf = vec![];
+    /// true.encode(&mut buf);
+    /// assert_eq!(buf, b"t");
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         writer.write_all(match self {
             true => &[b't'],
@@ -66,6 +94,14 @@ impl Encode for bool {
 }
 
 impl Encode for BigInt {
+    /// ```
+    /// use bencodex::{ Encode };
+    /// use num_bigint::BigInt;
+    ///
+    /// let mut buf = vec![];
+    /// BigInt::from(0).encode(&mut buf);
+    /// assert_eq!(buf, b"i0e");
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         writer.write_all(&[b'i'])?;
         writer.write_all(&self.to_str_radix(10).into_bytes())?;
@@ -76,6 +112,15 @@ impl Encode for BigInt {
 }
 
 impl Encode for Vec<BencodexValue> {
+    /// ```
+    /// use bencodex::{ Encode, BencodexValue };
+    /// use num_bigint::BigInt;
+    ///
+    /// let list: Vec<BencodexValue> = vec![0.into(), ().into()];
+    /// let mut buf = vec![];
+    /// list.encode(&mut buf);
+    /// assert_eq!(buf, b"li0ene");
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         writer.write_all(&[b'l'])?;
         for el in self {
@@ -88,6 +133,14 @@ impl Encode for Vec<BencodexValue> {
 }
 
 impl Encode for () {
+    /// ```
+    /// use bencodex::{ Encode };
+    /// use num_bigint::BigInt;
+    ///
+    /// let mut buf = vec![];
+    /// BigInt::from(0).encode(&mut buf);
+    /// assert_eq!(buf, b"i0e");
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         writer.write_all(&[b'n'])?;
 
@@ -134,6 +187,18 @@ fn compare_key(x: &BencodexKey, y: &BencodexKey) -> Ordering {
 }
 
 impl Encode for BTreeMap<BencodexKey, BencodexValue> {
+    /// ```
+    /// use bencodex::{ Encode, BencodexKey, BencodexValue };
+    /// use std::collections::BTreeMap;
+    ///
+    /// let mut dict: BTreeMap<BencodexKey, BencodexValue> = BTreeMap::new();
+    /// dict.insert("".into(), "".into());
+    ///
+    /// let mut buf = vec![];
+    /// dict.encode(&mut buf);
+    ///
+    /// assert_eq!(buf, b"du0:u0:e")
+    /// ```
     fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
         let pairs = self
             .into_iter()

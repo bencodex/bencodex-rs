@@ -309,6 +309,15 @@ fn read_number(s: &[u8]) -> Option<(BigInt, usize)> {
 }
 
 impl Decode for Vec<u8> {
+    /// ```
+    /// use bencodex::{ Decode, BencodexValue };
+    /// use std::collections::BTreeMap;
+    ///
+    /// let buf = b"de".to_vec();
+    /// let dictionary = buf.decode().ok().unwrap();
+    ///
+    /// assert_eq!(dictionary, BencodexValue::Dictionary(BTreeMap::new()));
+    /// ```
     fn decode(self) -> Result<BencodexValue, DecodeError> {
         Ok(decode_impl(&self, 0)?.0)
     }
