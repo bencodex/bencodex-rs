@@ -58,7 +58,7 @@ pub trait Decode {
     /// let vec = vec![b'n'];
     /// let null = vec.decode().unwrap();
     ///
-    /// assert_eq!(BencodexValue::Null(()), null);
+    /// assert_eq!(BencodexValue::Null, null);
     /// ```
     /// [Bencodex]: https://bencodex.org/
     fn decode(self) -> Result<BencodexValue, DecodeError>;
@@ -106,7 +106,7 @@ fn decode_impl(vector: &[u8], start: usize) -> Result<(BencodexValue, usize), De
         b'0'..=b'9' => decode_byte_string_impl(vector, start),
         b't' => Ok((BencodexValue::Boolean(true), 1)),
         b'f' => Ok((BencodexValue::Boolean(false), 1)),
-        b'n' => Ok((BencodexValue::Null(()), 1)),
+        b'n' => Ok((BencodexValue::Null, 1)),
         _ => Err(DecodeError::UnexpectedTokenError {
             token: vector[start],
             point: start,

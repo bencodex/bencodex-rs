@@ -116,7 +116,7 @@ impl Encode for Vec<BencodexValue> {
     /// use bencodex::{ Encode, BencodexValue };
     /// use num_bigint::BigInt;
     ///
-    /// let list: Vec<BencodexValue> = vec![0.into(), ().into()];
+    /// let list: Vec<BencodexValue> = vec![0.into(), BencodexValue::Null];
     /// let mut buf = vec![];
     /// list.encode(&mut buf);
     /// assert_eq!(buf, b"li0ene");
@@ -132,20 +132,10 @@ impl Encode for Vec<BencodexValue> {
     }
 }
 
-impl Encode for () {
-    /// ```
-    /// use bencodex::{ Encode };
-    /// use num_bigint::BigInt;
-    ///
-    /// let mut buf = vec![];
-    /// BigInt::from(0).encode(&mut buf);
-    /// assert_eq!(buf, b"i0e");
-    /// ```
-    fn encode(self, writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
-        writer.write_all(&[b'n'])?;
+fn encode_null(writer: &mut dyn io::Write) -> Result<(), std::io::Error> {
+    writer.write_all(&[b'n'])?;
 
-        Ok(())
-    }
+    Ok(())
 }
 
 impl Encode for BencodexValue {
@@ -157,7 +147,7 @@ impl Encode for BencodexValue {
             BencodexValue::Dictionary(x) => x.encode(writer)?,
             BencodexValue::List(x) => x.encode(writer)?,
             BencodexValue::Boolean(x) => x.encode(writer)?,
-            BencodexValue::Null(x) => x.encode(writer)?,
+            BencodexValue::Null => encode_null(writer)?,
             BencodexValue::Number(x) => x.encode(writer)?,
         }
 
@@ -344,22 +334,6 @@ mod tests {
             }
         }
 
-        mod null {
-            use super::super::super::*;
-            use super::*;
-
-            #[test]
-            fn should_pass_error() {
-                let bvalue = ();
-
-                // write 'n'
-                let mut writer = ConditionFailWriter::new(vec![1]);
-                let err = bvalue.encode(&mut writer).unwrap_err();
-                assert_eq!(std::io::ErrorKind::Other, err.kind());
-                assert_eq!("", err.to_string());
-            }
-        }
-
         mod vec_u8 {
             use super::super::super::*;
             use super::*;
@@ -395,10 +369,10 @@ mod tests {
             #[test]
             fn should_order_keys() {
                 let mut bvalue: BTreeMap<BencodexKey, BencodexValue> = BTreeMap::new();
-                bvalue.insert(BencodexKey::Text("ua".to_string()), BencodexValue::Null(()));
-                bvalue.insert(BencodexKey::Binary(vec![b'a']), BencodexValue::Null(()));
-                bvalue.insert(BencodexKey::Text("ub".to_string()), BencodexValue::Null(()));
-                bvalue.insert(BencodexKey::Binary(vec![b'b']), BencodexValue::Null(()));
+                bvalue.insert(BencodexKey::Text("ua".to_string()), BencodexValue::Null);
+                bvalue.insert(BencodexKey::Binary(vec![b'a']), BencodexValue::Null);
+                bvalue.insert(BencodexKey::Text("ub".to_string()), BencodexValue::Null);
+                bvalue.insert(BencodexKey::Binary(vec![b'b']), BencodexValue::Null);
 
                 let mut writer = Vec::new();
                 assert!(bvalue.to_owned().encode(&mut writer).is_ok());
@@ -408,7 +382,7 @@ mod tests {
             #[test]
             fn should_pass_error() {
                 let mut bvalue: BTreeMap<BencodexKey, BencodexValue> = BTreeMap::new();
-                bvalue.insert(BencodexKey::Text("".to_string()), BencodexValue::Null(()));
+                bvalue.insert(BencodexKey::Text("".to_string()), BencodexValue::Null);
 
                 // write 'd'
                 let mut writer = ConditionFailWriter::new(vec![1]);
@@ -461,7 +435,7 @@ mod tests {
             #[test]
             fn should_pass_error() {
                 let bvalue: &mut Vec<BencodexValue> = &mut Vec::new();
-                bvalue.push(BencodexValue::Null(()));
+                bvalue.push(BencodexValue::Null);
 
                 // write 'l'
                 let mut writer = ConditionFailWriter::new(vec![1]);

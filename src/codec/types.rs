@@ -38,7 +38,7 @@ pub type BencodexList = Vec<BencodexValue>;
 /// BENCODEX_NULL.encode(&mut buf);
 /// assert_eq!(buf, b"n")
 /// ```
-pub const BENCODEX_NULL: BencodexValue = BencodexValue::Null(());
+pub const BENCODEX_NULL: BencodexValue = BencodexValue::Null;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum BencodexValue {
@@ -48,7 +48,7 @@ pub enum BencodexValue {
     Number(BigInt),
     List(BencodexList),
     Dictionary(BencodexDictionary),
-    Null(()),
+    Null,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Debug, Clone, Ord)]
@@ -158,12 +158,6 @@ where
     }
 }
 
-impl From<()> for BencodexValue {
-    fn from(val: ()) -> Self {
-        BencodexValue::Null(val)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     mod into {
@@ -252,8 +246,8 @@ mod tests {
 
         #[test]
         fn null() {
-            let value: BencodexValue = ().into();
-            assert_eq!(value, BencodexValue::Null(()));
+            let value: BencodexValue = BencodexValue::Null;
+            assert_eq!(value, BencodexValue::Null);
         }
 
         #[test]
@@ -272,11 +266,11 @@ mod tests {
                 BencodexValue::List(vec![0.into(), 1.into(), 2.into(), 3.into()])
             );
 
-            let l = vec![(), (), ()];
+            let l = vec![BencodexValue::Null, BencodexValue::Null, BencodexValue::Null];
             let value: BencodexValue = l.into();
             assert_eq!(
                 value,
-                BencodexValue::List(vec![().into(), ().into(), ().into()])
+                BencodexValue::List(vec![BencodexValue::Null, BencodexValue::Null, BencodexValue::Null])
             );
 
             let l: Vec<Vec<u8>> = vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7]];

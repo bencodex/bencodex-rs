@@ -77,7 +77,7 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                                 BencodexValue::Binary(base64::decode(v.replace('\n', "")).unwrap())
                             }
                             "null" => match v.as_ref() {
-                                "~" | "null" => BencodexValue::Null(()),
+                                "~" | "null" => BencodexValue::Null,
                                 _ => unreachable!(),
                             },
                             _ => BencodexValue::Text(v),
@@ -92,7 +92,7 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                     } else if let Ok(b) = v.parse::<bool>() {
                         BencodexValue::Boolean(b)
                     } else if v == "null" {
-                        BencodexValue::Null(())
+                        BencodexValue::Null
                     } else {
                         BencodexValue::Text(v)
                     }
