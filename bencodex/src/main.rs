@@ -16,5 +16,5 @@ fn main() {
         }
     };
 
-    println!("{:?}", decoded);
+    println!("{}", decoded);
 }

@@ -19,6 +19,7 @@ name = "bencodex"
 itertools = "0.10.0"
 num-traits = "0.2.14"
 num-bigint = "0.3"
+hex = "0.4.3"
 
 [dev-dependencies]
 yaml-rust = "0.4.4"
