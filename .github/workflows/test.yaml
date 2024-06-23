@@ -1,25 +1,24 @@
 on: push
 name: test
+permissions:
+  contents: read
 jobs:
   run-tests:
     runs-on: ubuntu-20.04
+    container:
+      image: xd009642/tarpaulin:0.30.0
+      options: --security-opt seccomp=unconfined
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions-rs/toolchain@v1.0.3
-        with:
-          toolchain: 1.49.0
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: latest
-
+      - name: Generate code coverage
+        run: |
+          cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
       - name: Archive code coverage results
         uses: actions/upload-artifact@v1
         with:
