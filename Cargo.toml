@@ -12,6 +12,11 @@ documentation = "https://docs.rs/crate/bencodex-rs"
 
 [lib]
 name = "bencodex"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bencodex"
+path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -26,6 +31,3 @@ yaml-rust = "0.4.4"
 base64 = "0.13.0"
 syn = "1.0"
 quote = "1.0"
-
-[workspace]
-members = ["cli"]
