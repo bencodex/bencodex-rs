@@ -1,5 +1,8 @@
 use num_bigint::BigInt;
-use std::{collections::BTreeMap, fmt::{Debug, Display}};
+use std::{
+    collections::BTreeMap,
+    fmt::{Debug, Display},
+};
 
 /// The type alias of `BTreepMap<BencodexKey, BencodexValue>` to reduce code size.
 ///
@@ -88,7 +91,7 @@ impl Display for BencodexValue {
                     }
                 }
                 f.write_str("]")
-            },
+            }
             Self::Dictionary(arg0) => {
                 f.write_str("{")?;
                 let mut iter = arg0.iter().peekable();
@@ -99,7 +102,7 @@ impl Display for BencodexValue {
                     }
                 }
                 f.write_str("}")
-            },
+            }
             Self::Null => write!(f, "null"),
         }
     }
@@ -341,11 +344,19 @@ mod tests {
                 BencodexValue::List(vec![0.into(), 1.into(), 2.into(), 3.into()])
             );
 
-            let l = vec![BencodexValue::Null, BencodexValue::Null, BencodexValue::Null];
+            let l = vec![
+                BencodexValue::Null,
+                BencodexValue::Null,
+                BencodexValue::Null,
+            ];
             let value: BencodexValue = l.into();
             assert_eq!(
                 value,
-                BencodexValue::List(vec![BencodexValue::Null, BencodexValue::Null, BencodexValue::Null])
+                BencodexValue::List(vec![
+                    BencodexValue::Null,
+                    BencodexValue::Null,
+                    BencodexValue::Null
+                ])
             );
 
             let l: Vec<Vec<u8>> = vec![vec![0, 1, 2, 3], vec![4, 5, 6, 7]];
