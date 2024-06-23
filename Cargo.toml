@@ -28,4 +28,4 @@ syn = "1.0"
 quote = "1.0"
 
 [workspace]
-members = ["bencodex"]
+members = ["cli"]
