@@ -9,5 +9,5 @@ jobs:
           submodules: recursive
       - uses: actions-rs/toolchain@v1.0.3
         with:
-          toolchain: 1.49.0
+          toolchain: 1.77.2
       - run: cargo build
