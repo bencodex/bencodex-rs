@@ -9,6 +9,7 @@ use yaml_rust::parser::MarkedEventReceiver;
 use yaml_rust::parser::Parser;
 use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use yaml_rust::Event;
+use base64::Engine;
 
 use bencodex::codec::types::{BencodexKey, BencodexValue};
 
@@ -73,9 +74,11 @@ impl MarkedEventReceiver for TestsuiteYamlLoader {
                                 Err(_) => unreachable!(),
                                 Ok(v) => BencodexValue::Number(BigInt::from_i64(v).unwrap()),
                             },
-                            "binary" => {
-                                BencodexValue::Binary(base64::decode(v.replace('\n', "")).unwrap())
-                            }
+                            "binary" => BencodexValue::Binary(
+                                base64::engine::general_purpose::STANDARD
+                                    .decode(v.replace('\n', ""))
+                                    .unwrap(),
+                            ),
                             "null" => match v.as_ref() {
                                 "~" | "null" => BencodexValue::Null,
                                 _ => unreachable!(),
@@ -169,19 +172,19 @@ pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
                 let mut path: PathBuf = file.path();
                 let encoded = match fs::read(path.to_owned()) {
                     Ok(v) => v,
-                    Err(why) => panic!(why),
+                    Err(why) => panic!("{}", why),
                 };
 
                 path.set_extension("yaml");
                 let content = match fs::read_to_string(path.to_owned()) {
                     Ok(s) => s,
-                    Err(why) => panic!(why),
+                    Err(why) => panic!("{}", why),
                 };
 
                 let bvalue: BencodexValue =
                     match TestsuiteYamlLoader::load_from_str(&content.to_string()) {
                         Ok(v) => v.first().unwrap().to_owned(),
-                        Err(why) => panic!(why),
+                        Err(why) => panic!("{}", why),
                     };
 
                 Spec {
