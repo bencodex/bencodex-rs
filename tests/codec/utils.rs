@@ -2,6 +2,7 @@ use base64::Engine;
 use num_bigint::BigInt;
 use num_traits::cast::FromPrimitive;
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::fs;
 use std::fs::DirEntry;
 use std::path::PathBuf;
@@ -17,6 +18,7 @@ use bencodex::codec::types::{BencodexKey, BencodexValue};
 pub struct Spec {
     pub bvalue: BencodexValue,
     pub encoded: Vec<u8>,
+    pub json: String,
     pub name: String,
 }
 
@@ -151,8 +153,32 @@ impl TestsuiteYamlLoader {
     }
 }
 
+#[derive(Debug)]
+struct SpecImportError {
+    #[allow(dead_code)]
+    msg: String,
+}
+
+impl std::fmt::Display for SpecImportError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl SpecImportError {
+    pub fn new<T: ToString>(msg: T) -> SpecImportError {
+        SpecImportError {
+            msg: msg.to_string(),
+        }
+    }
+}
+
+impl Error for SpecImportError {}
+
 #[cfg(not(tarpaulin_include))]
 pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
+    use serde_json::Value;
+
     let files = fs::read_dir(SPEC_PATH)
         .unwrap()
         .filter(|entry| {
@@ -187,9 +213,27 @@ pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
                         Err(why) => panic!("{}", why),
                     };
 
+                path.set_extension("repr.json");
+                println!("path {:?}", path);
+
+                let json = match fs::read_to_string(path.to_owned())
+                    .map_err(|_| SpecImportError::new("Failed to read json."))
+                    .and_then(|x| {
+                        x.parse::<Value>()
+                            .map_err(|_| SpecImportError::new("Failed to parse json."))
+                    })
+                    .and_then(|x| {
+                        serde_json::to_string(&x)
+                            .map_err(|_| SpecImportError::new("Failed to stringify json."))
+                    }) {
+                    Ok(s) => s,
+                    Err(why) => panic!("{}", why),
+                };
+
                 Spec {
                     bvalue: bvalue,
                     encoded: encoded,
+                    json,
                     name: path.file_name().unwrap().to_str().unwrap().to_owned(),
                 }
             } else {
