@@ -66,7 +66,7 @@ impl Debug for BencodexValue {
             Self::Binary(arg0) => write!(f, "{:?}", BencodexKey::from(arg0)),
             Self::Text(arg0) => write!(f, "{:?}", BencodexKey::from(arg0)),
             Self::Boolean(arg0) => f.write_str(if *arg0 { "true" } else { "false" }),
-            Self::Number(arg0) => f.write_str(&arg0.to_string()),
+            Self::Number(arg0) => f.write_fmt(format_args!("{}", arg0)),
             Self::List(arg0) => f.debug_list().entries(arg0.iter()).finish(),
             Self::Dictionary(arg0) => f.debug_map().entries(arg0.iter()).finish(),
             Self::Null => write!(f, "null"),
@@ -80,7 +80,7 @@ impl Display for BencodexValue {
             Self::Binary(arg0) => f.write_fmt(format_args!("{}", BencodexKey::from(arg0))),
             Self::Text(arg0) => f.write_fmt(format_args!("{}", BencodexKey::from(arg0))),
             Self::Boolean(arg0) => f.write_str(if *arg0 { "true" } else { "false" }),
-            Self::Number(arg0) => f.write_str(&arg0.to_string()),
+            Self::Number(arg0) => write!(f, "\"{}\"", arg0),
             Self::List(arg0) => {
                 f.write_str("[")?;
                 for (i, item) in arg0.iter().enumerate() {
