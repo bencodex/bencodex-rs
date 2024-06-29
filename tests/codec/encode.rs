@@ -9,8 +9,12 @@ fn spec_test() {
         let mut buf: Vec<u8> = vec![];
         println!("---- SPEC [{}] ----", spec.name);
         println!("BVALUE: {:?}", spec.bvalue);
-        spec.bvalue.encode(&mut buf).ok();
+        spec.bvalue.clone().encode(&mut buf).ok();
         assert_eq!(buf, spec.encoded);
+
+        println!("JSON: {:?}", spec.json);
+        assert_eq!(format!("{}", spec.bvalue), spec.json);
+
         println!("---- PASSED ----");
     }
 }
