@@ -1,3 +1,4 @@
+use base64::Engine;
 use num_bigint::BigInt;
 use num_traits::cast::FromPrimitive;
 use std::collections::BTreeMap;
@@ -9,7 +10,6 @@ use yaml_rust::parser::MarkedEventReceiver;
 use yaml_rust::parser::Parser;
 use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use yaml_rust::Event;
-use base64::Engine;
 
 use bencodex::codec::types::{BencodexKey, BencodexValue};
 
