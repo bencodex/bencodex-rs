@@ -118,7 +118,7 @@ impl Display for BencodexKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Binary(arg0) => write!(f, "\"0x{}\"", hex::encode(arg0)),
-            Self::Text(arg0) => write!(f, "\"\u{FEFF}{}\"", arg0),
+            Self::Text(arg0) => write!(f, "\"\u{FEFF}{}\"", arg0.replace("\n", "\\n")),
         }
     }
 }
