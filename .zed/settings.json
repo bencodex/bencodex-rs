@@ -1,0 +1,7 @@
+{
+  "ensure_final_newline_on_save": true,
+  "formatter": "language_server",
+  "format_on_save": "on",
+  "show_wrap_guides": true,
+  "wrap_guides": [80]
+}
