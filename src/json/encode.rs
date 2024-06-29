@@ -1,9 +1,36 @@
+use base64::Engine;
+
 use crate::{BencodexKey, BencodexValue};
 
-fn to_json_impl(value: &BencodexValue, buf: &mut dyn std::io::Write) -> std::io::Result<()> {
+fn to_json_key_impl(
+    value: &BencodexKey,
+    options: &JsonOptions,
+    buf: &mut dyn std::io::Write,
+) -> std::io::Result<()> {
     match value {
-        BencodexValue::Binary(arg0) => buf.write_fmt(format_args!("{}", BencodexKey::from(arg0))),
-        BencodexValue::Text(arg0) => buf.write_fmt(format_args!("{}", BencodexKey::from(arg0))),
+        BencodexKey::Binary(arg0) => match options.bytes_encode_method {
+            BytesEncodeMethod::Base64 => buf.write_fmt(format_args!(
+                "\"b64:{}\"",
+                base64::engine::general_purpose::STANDARD.encode(arg0)
+            )),
+            BytesEncodeMethod::Hex => buf.write_fmt(format_args!("\"0x{}\"", hex::encode(arg0))),
+        },
+        BencodexKey::Text(arg0) => {
+            buf.write_fmt(format_args!("\"\u{FEFF}{}\"", arg0.replace('\n', "\\n")))
+        }
+    }?;
+
+    Ok(())
+}
+
+fn to_json_value_impl(
+    value: &BencodexValue,
+    options: &JsonOptions,
+    buf: &mut dyn std::io::Write,
+) -> std::io::Result<()> {
+    match value {
+        BencodexValue::Binary(arg0) => to_json_key_impl(&BencodexKey::from(arg0), options, buf),
+        BencodexValue::Text(arg0) => to_json_key_impl(&BencodexKey::from(arg0), options, buf),
         BencodexValue::Boolean(arg0) => buf
             .write_all(if *arg0 { b"true" } else { b"false" })
             .map(|_| ()),
@@ -11,7 +38,7 @@ fn to_json_impl(value: &BencodexValue, buf: &mut dyn std::io::Write) -> std::io:
         BencodexValue::List(arg0) => {
             buf.write_all(b"[")?;
             for (i, item) in arg0.iter().enumerate() {
-                to_json_impl(item, buf)?;
+                to_json_value_impl(item, options, buf)?;
                 if i < arg0.len() - 1 {
                     buf.write_all(b",")?;
                 }
@@ -22,7 +49,9 @@ fn to_json_impl(value: &BencodexValue, buf: &mut dyn std::io::Write) -> std::io:
             buf.write_all(b"{")?;
             let mut iter = arg0.iter().peekable();
             while let Some((key, value)) = iter.next() {
-                write!(buf, "{}:{}", key, value)?;
+                to_json_key_impl(key, options, buf)?;
+                buf.write_all(b":")?;
+                to_json_value_impl(value, options, buf)?;
                 if iter.peek().is_some() {
                     buf.write_all(b",")?;
                 }
@@ -35,9 +64,29 @@ fn to_json_impl(value: &BencodexValue, buf: &mut dyn std::io::Write) -> std::io:
     Ok(())
 }
 
+pub enum BytesEncodeMethod {
+    Base64,
+    Hex,
+}
+
+impl Default for BytesEncodeMethod {
+    fn default() -> Self {
+        Self::Base64
+    }
+}
+
+#[derive(Default)]
+pub struct JsonOptions {
+    pub bytes_encode_method: BytesEncodeMethod,
+}
+
 pub fn to_json(value: &BencodexValue) -> String {
+    to_json_with_options(value, JsonOptions::default())
+}
+
+pub fn to_json_with_options(value: &BencodexValue, options: JsonOptions) -> String {
     let mut buf: Vec<u8> = vec![];
-    to_json_impl(value, &mut buf).ok();
+    to_json_value_impl(value, &options, &mut buf).ok();
 
     String::from_utf8(buf).unwrap()
 }
