@@ -4,7 +4,7 @@ use bencodex::codec::encode::Encode;
 
 #[test]
 fn spec_test() {
-    let specs = utils::iter_spec().unwrap();
+    let specs = utils::iter_spec(bencodex::BytesEncodeMethod::Base64).unwrap();
     for spec in specs {
         let mut buf: Vec<u8> = vec![];
         println!("---- SPEC [{}] ----", spec.name);

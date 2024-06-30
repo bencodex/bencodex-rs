@@ -189,19 +189,42 @@ fn hex_to_base64(s: &String) -> String {
     }
 }
 
-fn traverse(value: &Value) -> Value {
+fn base64_to_hex(s: &String) -> String {
+    if s.starts_with("b64:") {
+        format!(
+            "0x{}",
+            hex::encode(
+                base64::engine::general_purpose::STANDARD
+                    .decode(s[4..].to_owned())
+                    .unwrap()
+            )
+        )
+    } else {
+        s.to_owned()
+    }
+}
+
+fn traverse(value: &Value, bytes_encode_method: &bencodex::BytesEncodeMethod) -> Value {
+    let converter = match bytes_encode_method {
+        bencodex::BytesEncodeMethod::Hex => base64_to_hex,
+        bencodex::BytesEncodeMethod::Base64 => hex_to_base64,
+    };
     match value {
         Value::Object(obj) => {
             let mut ret = obj.clone();
             for (key, value) in obj.iter() {
-                if key.starts_with("0x") {
+                let new_key = converter(key);
+                let new_value = match value {
+                    Value::String(s) if s.starts_with("0x") => Value::String(hex_to_base64(s)),
+                    _ => value.to_owned(),
+                };
+
+                if !new_key.eq(key) {
                     ret.remove(key);
-                    let new_key = hex_to_base64(key);
-                    let new_value = match value {
-                        Value::String(s) if s.starts_with("0x") => Value::String(hex_to_base64(s)),
-                        _ => value.to_owned(),
-                    };
+
                     ret.insert(new_key, new_value);
+                } else {
+                    ret[key] = new_value;
                 }
             }
 
@@ -210,18 +233,18 @@ fn traverse(value: &Value) -> Value {
         Value::Array(list) => Value::Array(
             list.iter()
                 .map(|x| match x {
-                    Value::String(s) if s.starts_with("0x") => Value::String(hex_to_base64(s)),
+                    Value::String(s) => Value::String(converter(s)),
                     _ => x.to_owned(),
                 })
                 .collect::<Vec<Value>>(),
         ),
-        Value::String(s) => Value::String(hex_to_base64(s)),
+        Value::String(s) => Value::String(converter(s)),
         _ => value.to_owned(),
     }
 }
 
 #[cfg(not(tarpaulin_include))]
-pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
+pub fn iter_spec(bytes_encode_method: bencodex::BytesEncodeMethod) -> std::io::Result<Vec<Spec>> {
     use serde_json::Value;
 
     let files = fs::read_dir(SPEC_PATH)
@@ -267,7 +290,7 @@ pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
                         x.parse::<Value>()
                             .map_err(|_| SpecImportError::new("Failed to parse json."))
                     })
-                    .map(|x| traverse(&x))
+                    .map(|x| traverse(&x, &bytes_encode_method))
                     .and_then(|x| {
                         serde_json::to_string(&x)
                             .map_err(|_| SpecImportError::new("Failed to stringify json."))
