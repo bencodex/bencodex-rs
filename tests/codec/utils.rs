@@ -204,10 +204,10 @@ fn base64_to_hex(s: &String) -> String {
     }
 }
 
-fn traverse(value: &Value, bytes_encode_method: &bencodex::BytesEncodeMethod) -> Value {
+fn traverse(value: &Value, bytes_encode_method: &bencodex::BinaryEncoding) -> Value {
     let converter = match bytes_encode_method {
-        bencodex::BytesEncodeMethod::Hex => base64_to_hex,
-        bencodex::BytesEncodeMethod::Base64 => hex_to_base64,
+        bencodex::BinaryEncoding::Hex => base64_to_hex,
+        bencodex::BinaryEncoding::Base64 => hex_to_base64,
     };
     match value {
         Value::Object(obj) => {
@@ -244,7 +244,7 @@ fn traverse(value: &Value, bytes_encode_method: &bencodex::BytesEncodeMethod) ->
 }
 
 #[cfg(not(tarpaulin_include))]
-pub fn iter_spec(bytes_encode_method: bencodex::BytesEncodeMethod) -> std::io::Result<Vec<Spec>> {
+pub fn iter_spec(bytes_encode_method: bencodex::BinaryEncoding) -> std::io::Result<Vec<Spec>> {
     use serde_json::Value;
 
     let files = fs::read_dir(SPEC_PATH)

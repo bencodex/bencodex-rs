@@ -7,4 +7,4 @@ pub use codec::types::{
 };
 
 mod json;
-pub use json::encode::{to_json, to_json_with_options, BytesEncodeMethod, JsonOptions};
+pub use json::encode::{to_json, to_json_with_options, BinaryEncoding, JsonOptions};

@@ -8,12 +8,12 @@ fn to_json_key_impl(
     buf: &mut dyn std::io::Write,
 ) -> std::io::Result<()> {
     match value {
-        BencodexKey::Binary(arg0) => match options.bytes_encode_method {
-            BytesEncodeMethod::Base64 => buf.write_fmt(format_args!(
+        BencodexKey::Binary(arg0) => match options.binary_encoding {
+            BinaryEncoding::Base64 => buf.write_fmt(format_args!(
                 "\"b64:{}\"",
                 base64::engine::general_purpose::STANDARD.encode(arg0)
             )),
-            BytesEncodeMethod::Hex => buf.write_fmt(format_args!("\"0x{}\"", hex::encode(arg0))),
+            BinaryEncoding::Hex => buf.write_fmt(format_args!("\"0x{}\"", hex::encode(arg0))),
         },
         BencodexKey::Text(arg0) => {
             buf.write_fmt(format_args!("\"\u{FEFF}{}\"", arg0.replace('\n', "\\n")))
@@ -64,12 +64,12 @@ fn to_json_value_impl(
     Ok(())
 }
 
-pub enum BytesEncodeMethod {
+pub enum BinaryEncoding {
     Base64,
     Hex,
 }
 
-impl Default for BytesEncodeMethod {
+impl Default for BinaryEncoding {
     fn default() -> Self {
         Self::Base64
     }
@@ -77,7 +77,7 @@ impl Default for BytesEncodeMethod {
 
 #[derive(Default)]
 pub struct JsonOptions {
-    pub bytes_encode_method: BytesEncodeMethod,
+    pub binary_encoding: BinaryEncoding,
 }
 
 pub fn to_json(value: &BencodexValue) -> String {

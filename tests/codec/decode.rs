@@ -4,7 +4,7 @@ use bencodex::codec::decode::Decode;
 
 #[test]
 fn spec_test() {
-    let specs = utils::iter_spec(bencodex::BytesEncodeMethod::Base64).unwrap();
+    let specs = utils::iter_spec(bencodex::BinaryEncoding::Base64).unwrap();
     for spec in specs {
         println!("---- SPEC [{}] ----", spec.name);
         println!("BVALUE: {:?}", spec.bvalue);
