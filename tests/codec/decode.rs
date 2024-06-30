@@ -1,10 +1,11 @@
 use super::utils;
 #[cfg(test)]
 use bencodex::codec::decode::Decode;
+use bencodex::json::encode::BinaryEncoding;
 
 #[test]
 fn spec_test() {
-    let specs = utils::iter_spec(bencodex::BinaryEncoding::Base64).unwrap();
+    let specs = utils::iter_spec(BinaryEncoding::Base64).unwrap();
     for spec in specs {
         println!("---- SPEC [{}] ----", spec.name);
         println!("BVALUE: {:?}", spec.bvalue);

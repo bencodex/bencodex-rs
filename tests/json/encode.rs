@@ -1,18 +1,18 @@
 use super::super::codec::utils;
 #[cfg(test)]
-use bencodex::{to_json_with_options, JsonOptions};
+use bencodex::json::encode::{to_json_with_options, BinaryEncoding, JsonOptions};
 
 const SPEC_TEST_BASE64_OPTIONS: JsonOptions = JsonOptions {
-    binary_encoding: bencodex::BinaryEncoding::Base64,
+    binary_encoding: BinaryEncoding::Base64,
 };
 
 const SPEC_TEST_HEX_OPTIONS: JsonOptions = JsonOptions {
-    binary_encoding: bencodex::BinaryEncoding::Hex,
+    binary_encoding: BinaryEncoding::Hex,
 };
 
 #[test]
 fn spec_test_base64() {
-    let specs = utils::iter_spec(bencodex::BinaryEncoding::Base64).unwrap();
+    let specs = utils::iter_spec(BinaryEncoding::Base64).unwrap();
     for spec in specs {
         println!("---- SPEC [{}] ----", spec.name);
 
@@ -28,7 +28,7 @@ fn spec_test_base64() {
 
 #[test]
 fn spec_test_hex() {
-    let specs = utils::iter_spec(bencodex::BinaryEncoding::Hex).unwrap();
+    let specs = utils::iter_spec(BinaryEncoding::Hex).unwrap();
     for spec in specs {
         println!("---- SPEC [{}] ----", spec.name);
 

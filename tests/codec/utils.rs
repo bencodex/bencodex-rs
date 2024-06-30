@@ -15,6 +15,7 @@ use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use yaml_rust::Event;
 
 use bencodex::codec::types::{BencodexKey, BencodexValue};
+use bencodex::json::encode::BinaryEncoding;
 
 #[derive(PartialEq, Debug)]
 pub struct Spec {
@@ -204,10 +205,10 @@ fn base64_to_hex(s: &String) -> String {
     }
 }
 
-fn traverse(value: &Value, bytes_encode_method: &bencodex::BinaryEncoding) -> Value {
+fn traverse(value: &Value, bytes_encode_method: &BinaryEncoding) -> Value {
     let converter = match bytes_encode_method {
-        bencodex::BinaryEncoding::Hex => base64_to_hex,
-        bencodex::BinaryEncoding::Base64 => hex_to_base64,
+        BinaryEncoding::Hex => base64_to_hex,
+        BinaryEncoding::Base64 => hex_to_base64,
     };
     match value {
         Value::Object(obj) => {
@@ -244,7 +245,7 @@ fn traverse(value: &Value, bytes_encode_method: &bencodex::BinaryEncoding) -> Va
 }
 
 #[cfg(not(tarpaulin_include))]
-pub fn iter_spec(bytes_encode_method: bencodex::BinaryEncoding) -> std::io::Result<Vec<Spec>> {
+pub fn iter_spec(bytes_encode_method: BinaryEncoding) -> std::io::Result<Vec<Spec>> {
     use serde_json::Value;
 
     let files = fs::read_dir(SPEC_PATH)
