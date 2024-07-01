@@ -26,6 +26,7 @@ num-traits = "0.2.19"
 num-bigint = "0.4.6"
 hex = "0.4.3"
 base64 = "0.22.1"
+clap = { version = "4.5.8", features = ["derive"] }
 
 [dev-dependencies]
 yaml-rust = "0.4.5"
