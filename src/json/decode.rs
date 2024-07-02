@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::{BencodexDictionary, BencodexKey, BencodexValue};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum JsonDecodeError {
     InvalidJsonString,
     InvalidJson,
