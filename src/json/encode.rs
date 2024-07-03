@@ -4,7 +4,7 @@ use crate::{BencodexKey, BencodexValue};
 
 fn to_json_key_impl(
     value: &BencodexKey,
-    options: &JsonOptions,
+    options: &JsonEncodeOptions,
     buf: &mut dyn std::io::Write,
 ) -> std::io::Result<()> {
     match value {
@@ -25,7 +25,7 @@ fn to_json_key_impl(
 
 fn to_json_value_impl(
     value: &BencodexValue,
-    options: &JsonOptions,
+    options: &JsonEncodeOptions,
     buf: &mut dyn std::io::Write,
 ) -> std::io::Result<()> {
     match value {
@@ -76,15 +76,15 @@ impl Default for BinaryEncoding {
 }
 
 #[derive(Default)]
-pub struct JsonOptions {
+pub struct JsonEncodeOptions {
     pub binary_encoding: BinaryEncoding,
 }
 
 pub fn to_json(value: &BencodexValue) -> String {
-    to_json_with_options(value, JsonOptions::default())
+    to_json_with_options(value, JsonEncodeOptions::default())
 }
 
-pub fn to_json_with_options(value: &BencodexValue, options: JsonOptions) -> String {
+pub fn to_json_with_options(value: &BencodexValue, options: JsonEncodeOptions) -> String {
     let mut buf: Vec<u8> = vec![];
     to_json_value_impl(value, &options, &mut buf).ok();
 

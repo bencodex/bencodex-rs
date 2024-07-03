@@ -1,5 +1,5 @@
 use bencodex::json::decode::from_json;
-use bencodex::json::encode::{to_json_with_options, BinaryEncoding, JsonOptions};
+use bencodex::json::encode::{to_json_with_options, BinaryEncoding, JsonEncodeOptions};
 use bencodex::{Decode, Encode};
 use clap::Parser;
 use std::io::{Read, Write};
@@ -71,7 +71,7 @@ fn encode(args: &Args) -> ExitCode {
         }
     };
 
-    let json_encode_options = JsonOptions {
+    let json_encode_options = JsonEncodeOptions {
         binary_encoding: if args.base64 {
             BinaryEncoding::Base64
         } else {

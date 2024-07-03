@@ -1,12 +1,12 @@
 use super::super::codec::utils;
 #[cfg(test)]
-use bencodex::json::encode::{to_json_with_options, BinaryEncoding, JsonOptions};
+use bencodex::json::encode::{to_json_with_options, BinaryEncoding, JsonEncodeOptions};
 
-const SPEC_TEST_BASE64_OPTIONS: JsonOptions = JsonOptions {
+const SPEC_TEST_BASE64_OPTIONS: JsonEncodeOptions = JsonEncodeOptions {
     binary_encoding: BinaryEncoding::Base64,
 };
 
-const SPEC_TEST_HEX_OPTIONS: JsonOptions = JsonOptions {
+const SPEC_TEST_HEX_OPTIONS: JsonEncodeOptions = JsonEncodeOptions {
     binary_encoding: BinaryEncoding::Hex,
 };
 
