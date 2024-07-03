@@ -64,6 +64,7 @@ fn to_json_value_impl(
     Ok(())
 }
 
+/// An enum type to choose how to encode Bencodex binary type when encoding to JSON.
 pub enum BinaryEncoding {
     Base64,
     Hex,
@@ -75,15 +76,48 @@ impl Default for BinaryEncoding {
     }
 }
 
+/// Options used by [`to_json_with_options`] when encoding Bencodex to JSON.
+///
+/// # Examples
+///
+/// If you want to encode binary as hexadecimal string, you can use like below:
+///
+/// ```
+/// use bencodex::json::{ JsonEncodeOptions, BinaryEncoding };
+///
+/// JsonEncodeOptions {
+///   binary_encoding: BinaryEncoding::Hex,
+/// }
+/// ```
+///
+/// If you want to encode binary as base64 string, you can use like below:
+///
+/// ```
+/// use bencodex::json::{ JsonEncodeOptions, BinaryEncoding };
+///
+/// JsonEncodeOptions {
+///   binary_encoding: BinaryEncoding::Base64,
+/// }
+/// ```
+///
+/// Or you can use [`JsonEncodeOptions::default`] for base64 case:
+///
+/// ```
+/// use bencodex::json::{ JsonEncodeOptions, BinaryEncoding };
+///
+/// JsonEncodeOptions::default()
+/// ```
 #[derive(Default)]
 pub struct JsonEncodeOptions {
     pub binary_encoding: BinaryEncoding,
 }
 
+/// Encode Bencodex to JSON with default options.
 pub fn to_json(value: &BencodexValue) -> String {
     to_json_with_options(value, JsonEncodeOptions::default())
 }
 
+/// Encode Bencodex to JSON with the given options.
 pub fn to_json_with_options(value: &BencodexValue, options: JsonEncodeOptions) -> String {
     let mut buf: Vec<u8> = vec![];
     to_json_value_impl(value, &options, &mut buf).ok();
