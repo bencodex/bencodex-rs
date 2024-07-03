@@ -66,6 +66,35 @@ assert!(result.is_ok());
 assert_eq!(result.unwrap(), BencodexValue::Null);
 ```
 
+### CLI Tool
+
+
+Also, it provides a CLI tool to encode from Bencodex to JSON and to decode from JSON to Bencodex. You can install it with `json-cli` feature like the below line:
+
+```bash
+cargo install bencodex-rs --features json-cli
+```
+
+You can use like the below:
+
+```bash
+# encode
+$ echo -n 'n' | bencodex
+null
+$ echo -n 'i123e' | bencodex
+"123"
+$ echo -n '1:\x12' | bencodex
+"0x12"
+$ echo -n '1:\x12' | bencodex --base64
+"b64:Eg=="
+
+# decode
+$ echo -n '"123"' | bencodex -d
+123
+$ echo -n 'null' | bencodex -d
+n
+```
+
 ## Building and Testing
 
 You can build and test the code with [cargo] command.
