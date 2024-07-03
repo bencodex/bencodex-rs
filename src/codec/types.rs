@@ -1,8 +1,5 @@
 use num_bigint::BigInt;
-use std::{
-    collections::BTreeMap,
-    fmt::{Debug, Display},
-};
+use std::{collections::BTreeMap, fmt::Debug};
 
 /// The type alias of `BTreepMap<BencodexKey, BencodexValue>` to reduce code size.
 ///
@@ -43,7 +40,7 @@ pub type BencodexList = Vec<BencodexValue>;
 /// ```
 pub const BENCODEX_NULL: BencodexValue = BencodexValue::Null;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum BencodexValue {
     Binary(Vec<u8>),
     Text(String),
@@ -54,73 +51,10 @@ pub enum BencodexValue {
     Null,
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Clone, Ord)]
+#[derive(PartialEq, Eq, Debug, PartialOrd, Clone, Ord)]
 pub enum BencodexKey {
     Binary(Vec<u8>),
     Text(String),
-}
-
-impl Debug for BencodexValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Binary(arg0) => write!(f, "{:?}", BencodexKey::from(arg0)),
-            Self::Text(arg0) => write!(f, "{:?}", BencodexKey::from(arg0)),
-            Self::Boolean(arg0) => f.write_str(if *arg0 { "true" } else { "false" }),
-            Self::Number(arg0) => f.write_fmt(format_args!("{}", arg0)),
-            Self::List(arg0) => f.debug_list().entries(arg0.iter()).finish(),
-            Self::Dictionary(arg0) => f.debug_map().entries(arg0.iter()).finish(),
-            Self::Null => write!(f, "null"),
-        }
-    }
-}
-
-impl Display for BencodexValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Binary(arg0) => f.write_fmt(format_args!("{}", BencodexKey::from(arg0))),
-            Self::Text(arg0) => f.write_fmt(format_args!("{}", BencodexKey::from(arg0))),
-            Self::Boolean(arg0) => f.write_str(if *arg0 { "true" } else { "false" }),
-            Self::Number(arg0) => write!(f, "\"{}\"", arg0),
-            Self::List(arg0) => {
-                f.write_str("[")?;
-                for (i, item) in arg0.iter().enumerate() {
-                    if i == arg0.len() - 1 {
-                        write!(f, "{}", item)?;
-                    } else {
-                        write!(f, "{},", item)?;
-                    }
-                }
-                f.write_str("]")
-            }
-            Self::Dictionary(arg0) => {
-                f.write_str("{")?;
-                let mut iter = arg0.iter().peekable();
-                while let Some((key, value)) = iter.next() {
-                    write!(f, "{}:{}", key, value)?;
-                    if iter.peek().is_some() {
-                        f.write_str(",")?;
-                    }
-                }
-                f.write_str("}")
-            }
-            Self::Null => write!(f, "null"),
-        }
-    }
-}
-
-impl Debug for BencodexKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}", self))
-    }
-}
-
-impl Display for BencodexKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Binary(arg0) => write!(f, "\"0x{}\"", hex::encode(arg0)),
-            Self::Text(arg0) => write!(f, "\"\u{FEFF}{}\"", arg0.replace('\n', "\\n")),
-        }
-    }
 }
 
 impl From<&str> for BencodexKey {
