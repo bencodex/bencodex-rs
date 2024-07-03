@@ -7,9 +7,15 @@ The [Rust] implementation of [Bencodex].
 [Rust]: https://rust-lang.org/
 [Bencodex]: https://bencodex.org/
 
-## Encoding to JSON
+## Bencodex JSON feature.
 
-bencodex-rs implement Bencodex JSON feature. You can use `to_json` function to encode from Bencodex to JSON.
+bencodex-rs implements [Bencodex JSON] feature, encoding and decoding both.
+
+[Bencodex JSON]: https://github.com/planetarium/bencodex/blob/main/JSON.md
+
+### Encoding to JSON
+
+To encode from Bencodex to JSON, you can use `to_json` function.
 
 ```rust
 use bencodex::{ BencodexValue, json::to_json };
@@ -28,6 +34,30 @@ let json = to_json_with_options(&BencodexValue::Null, JsonEncodeOptions {
   binary_encoding: BinaryEncoding::Base64,
 });
 println!("{}", json);
+```
+
+### Decoding from JSON
+
+To decode from JSON to Bencodex, you can use `from_json_string` and `from_json` function.
+
+```rust
+// from_json_string
+use bencodex::{ BencodexValue, json::from_json_string };
+
+let result = from_json_string("null");
+assert!(result.is_ok());
+assert_eq!(result.unwrap(), BencodexValue::Null);
+```
+
+```rust
+// from_json
+use serde_json::from_str;
+use bencodex::{ BencodexValue, json::from_json };
+
+let json = from_str("null").unwrap();
+let result = from_json(&json);
+assert!(result.is_ok());
+assert_eq!(result.unwrap(), BencodexValue::Null);
 ```
 
 ## Building and Testing
