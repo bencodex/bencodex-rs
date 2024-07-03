@@ -42,7 +42,7 @@ fn from_json_key_impl(s: &str) -> Result<BencodexKey, JsonDecodeError> {
 /// ```
 /// use serde_json::from_str;
 /// use bencodex::BencodexValue;
-/// use bencodex::json::decode::from_json;
+/// use bencodex::json::from_json;
 ///
 /// let json = from_str("null").unwrap();
 /// let result = from_json(&json);
@@ -54,7 +54,7 @@ fn from_json_key_impl(s: &str) -> Result<BencodexKey, JsonDecodeError> {
 ///
 /// ```
 /// use serde_json::Value;
-/// use bencodex::json::decode::{ from_json, JsonDecodeError };
+/// use bencodex::json::{ from_json, JsonDecodeError };
 ///
 /// let result = from_json(&Value::String("0xZZ".to_string()));
 /// assert!(result.is_err());
@@ -105,7 +105,7 @@ pub fn from_json(value: &Value) -> Result<BencodexValue, JsonDecodeError> {
 ///
 /// ```
 /// use bencodex::BencodexValue;
-/// use bencodex::json::decode::from_json_string;
+/// use bencodex::json::from_json_string;
 ///
 /// let result = from_json_string("null");
 /// assert!(result.is_ok());
@@ -115,7 +115,7 @@ pub fn from_json(value: &Value) -> Result<BencodexValue, JsonDecodeError> {
 /// In error case which return [`JsonDecodeError::InvalidJsonString`]:
 ///
 /// ```
-/// use bencodex::json::decode::{ from_json_string, JsonDecodeError };
+/// use bencodex::json::{ from_json_string, JsonDecodeError };
 ///
 /// let result = from_json_string("nulll");
 /// assert!(result.is_err());
@@ -125,7 +125,7 @@ pub fn from_json(value: &Value) -> Result<BencodexValue, JsonDecodeError> {
 /// In error case which return [`JsonDecodeError::InvalidJson`]:
 ///
 /// ```
-/// use bencodex::json::decode::{ from_json_string, JsonDecodeError };
+/// use bencodex::json::{ from_json_string, JsonDecodeError };
 ///
 /// let result = from_json_string("\"0xZZ\"");
 /// assert!(result.is_err());

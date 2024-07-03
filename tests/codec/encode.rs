@@ -1,7 +1,7 @@
 use super::utils;
 #[cfg(test)]
 use bencodex::codec::encode::Encode;
-use bencodex::json::encode::BinaryEncoding;
+use bencodex::json::BinaryEncoding;
 
 #[test]
 fn spec_test() {

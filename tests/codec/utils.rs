@@ -15,7 +15,7 @@ use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use yaml_rust::Event;
 
 use bencodex::codec::types::{BencodexKey, BencodexValue};
-use bencodex::json::encode::BinaryEncoding;
+use bencodex::json::BinaryEncoding;
 
 #[derive(PartialEq, Debug)]
 pub struct Spec {

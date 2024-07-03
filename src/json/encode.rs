@@ -87,7 +87,7 @@ impl Default for BinaryEncoding {
 ///
 /// JsonEncodeOptions {
 ///   binary_encoding: BinaryEncoding::Hex,
-/// }
+/// };
 /// ```
 ///
 /// If you want to encode binary as base64 string, you can use like below:
@@ -97,7 +97,7 @@ impl Default for BinaryEncoding {
 ///
 /// JsonEncodeOptions {
 ///   binary_encoding: BinaryEncoding::Base64,
-/// }
+/// };
 /// ```
 ///
 /// Or you can use [`JsonEncodeOptions::default`] for base64 case:
@@ -105,7 +105,7 @@ impl Default for BinaryEncoding {
 /// ```
 /// use bencodex::json::{ JsonEncodeOptions, BinaryEncoding };
 ///
-/// JsonEncodeOptions::default()
+/// JsonEncodeOptions::default();
 /// ```
 #[derive(Default)]
 pub struct JsonEncodeOptions {
