@@ -6,4 +6,5 @@ pub use codec::types::{
     BencodexDictionary, BencodexKey, BencodexList, BencodexValue, BENCODEX_NULL,
 };
 
+#[cfg(feature = "json")]
 pub mod json;

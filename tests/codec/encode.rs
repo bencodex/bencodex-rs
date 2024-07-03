@@ -1,11 +1,10 @@
 use super::utils;
 #[cfg(test)]
 use bencodex::codec::encode::Encode;
-use bencodex::json::BinaryEncoding;
 
 #[test]
 fn spec_test() {
-    let specs = utils::iter_spec(BinaryEncoding::Base64).unwrap();
+    let specs = utils::iter_spec().unwrap();
     for spec in specs {
         let mut buf: Vec<u8> = vec![];
         println!("---- SPEC [{}] ----", spec.name);

@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::error::Error;
 use std::fs;
 use std::fs::DirEntry;
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::str::FromStr;
 use yaml_rust::parser::MarkedEventReceiver;
@@ -21,8 +22,21 @@ use bencodex::json::BinaryEncoding;
 pub struct Spec {
     pub bvalue: BencodexValue,
     pub encoded: Vec<u8>,
-    pub json: String,
     pub name: String,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct SpecWithJson {
+    pub spec: Spec,
+    pub json: String,
+}
+
+impl Deref for SpecWithJson {
+    type Target = Spec;
+
+    fn deref(&self) -> &Self::Target {
+        &self.spec
+    }
 }
 
 static SPEC_PATH: &str = "spec/testsuite";
@@ -245,9 +259,7 @@ fn traverse(value: &Value, bytes_encode_method: &BinaryEncoding) -> Value {
 }
 
 #[cfg(not(tarpaulin_include))]
-pub fn iter_spec(bytes_encode_method: BinaryEncoding) -> std::io::Result<Vec<Spec>> {
-    use serde_json::Value;
-
+pub fn iter_spec() -> std::io::Result<Vec<Spec>> {
     let files = fs::read_dir(SPEC_PATH)
         .unwrap()
         .filter(|entry| {
@@ -285,6 +297,63 @@ pub fn iter_spec(bytes_encode_method: BinaryEncoding) -> std::io::Result<Vec<Spe
                 path.set_extension("repr.json");
                 println!("path {:?}", path);
 
+                Spec {
+                    bvalue: bvalue,
+                    encoded: encoded,
+                    name: path.file_name().unwrap().to_str().unwrap().to_owned(),
+                }
+            } else {
+                unreachable!();
+            }
+        })
+        .collect::<Vec<_>>();
+    Ok(files)
+}
+
+#[cfg(feature = "json")]
+#[cfg(not(tarpaulin_include))]
+pub fn iter_spec_with_json(
+    bytes_encode_method: BinaryEncoding,
+) -> std::io::Result<Vec<SpecWithJson>> {
+    use serde_json::Value;
+
+    let files = fs::read_dir(SPEC_PATH)
+        .unwrap()
+        .filter(|entry| {
+            if let Ok(file) = entry {
+                println!("{:?}", file);
+                if let Some(ext) = file.path().extension() {
+                    ext == "dat"
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        })
+        .map(|entry: std::io::Result<DirEntry>| -> SpecWithJson {
+            if let Ok(file) = entry {
+                let mut path: PathBuf = file.path();
+                let encoded = match fs::read(path.to_owned()) {
+                    Ok(v) => v,
+                    Err(why) => panic!("{}", why),
+                };
+
+                path.set_extension("yaml");
+                let content = match fs::read_to_string(path.to_owned()) {
+                    Ok(s) => s,
+                    Err(why) => panic!("{}", why),
+                };
+
+                let bvalue: BencodexValue =
+                    match TestsuiteYamlLoader::load_from_str(&content.to_string()) {
+                        Ok(v) => v.first().unwrap().to_owned(),
+                        Err(why) => panic!("{}", why),
+                    };
+
+                path.set_extension("repr.json");
+                println!("path {:?}", path);
+
                 let json = match fs::read_to_string(path.to_owned())
                     .map_err(|_| SpecImportError::new("Failed to read json."))
                     .and_then(|x| {
@@ -300,11 +369,13 @@ pub fn iter_spec(bytes_encode_method: BinaryEncoding) -> std::io::Result<Vec<Spe
                     Err(why) => panic!("{}", why),
                 };
 
-                Spec {
-                    bvalue: bvalue,
-                    encoded: encoded,
+                SpecWithJson {
+                    spec: Spec {
+                        bvalue,
+                        encoded,
+                        name: path.file_name().unwrap().to_str().unwrap().to_owned(),
+                    },
                     json,
-                    name: path.file_name().unwrap().to_str().unwrap().to_owned(),
                 }
             } else {
                 unreachable!();

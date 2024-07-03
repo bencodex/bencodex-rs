@@ -11,6 +11,12 @@ The [Rust] implementation of [Bencodex].
 
 bencodex-rs implements [Bencodex JSON] feature, encoding and decoding both.
 
+To use Bencodex JSON feature, you should enable `json` feature.
+
+```toml
+bencodex-rs = { version = "<VERSION>", features = ["json"] }
+```
+
 [Bencodex JSON]: https://github.com/planetarium/bencodex/blob/main/JSON.md
 
 ### Encoding to JSON

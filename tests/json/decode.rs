@@ -4,7 +4,7 @@ use bencodex::json::{from_json_string, BinaryEncoding};
 
 #[test]
 fn spec_test_base64() {
-    let specs = utils::iter_spec(BinaryEncoding::Base64).unwrap();
+    let specs = utils::iter_spec_with_json(BinaryEncoding::Base64).unwrap();
     for spec in specs {
         println!("---- SPEC [{}] ----", spec.name);
 
@@ -17,7 +17,7 @@ fn spec_test_base64() {
 
 #[test]
 fn spec_test_hex() {
-    let specs = utils::iter_spec(BinaryEncoding::Hex).unwrap();
+    let specs = utils::iter_spec_with_json(BinaryEncoding::Hex).unwrap();
     for spec in specs {
         println!("---- SPEC [{}] ----", spec.name);
 
