@@ -10,4 +10,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: cargo, rustc, rust-std
-      - run: cargo build
+      - run: cargo build --all-features
