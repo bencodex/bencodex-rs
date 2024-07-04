@@ -4,10 +4,14 @@
 
 The [Rust] implementation of [Bencodex].
 
+- **Correctness** - Implement Bencodex spec and passed tests with its testsuites.
+- **[Bencodex JSON]** - Support encoding Bencodex to JSON and decoding JSON to Bencodex.
+- **Feature flags** - Support `json`, `json-cli` feature flags to minimize binary size in use.
+
 [Rust]: https://rust-lang.org/
 [Bencodex]: https://bencodex.org/
 
-## Bencodex JSON feature.
+## Bencodex JSON feature
 
 bencodex-rs implements [Bencodex JSON] feature, encoding and decoding both.
 
