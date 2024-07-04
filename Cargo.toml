@@ -22,6 +22,7 @@ required-features = ["json-cli"]
 [features]
 json = ["serde_json", "hex", "base64"]
 json-cli = ["json", "clap"]
+test = ["base64"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -2,6 +2,7 @@ use base64::Engine;
 use itertools::Itertools;
 use num_bigint::BigInt;
 use num_traits::cast::FromPrimitive;
+#[cfg(feature = "json")]
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::error::Error;
@@ -16,6 +17,7 @@ use yaml_rust::scanner::{Marker, ScanError, TokenType};
 use yaml_rust::Event;
 
 use bencodex::codec::types::{BencodexKey, BencodexValue};
+#[cfg(feature = "json")]
 use bencodex::json::BinaryEncoding;
 
 #[derive(PartialEq, Debug)]
@@ -192,6 +194,7 @@ impl SpecImportError {
 
 impl Error for SpecImportError {}
 
+#[cfg(feature = "json")]
 fn hex_to_base64(s: &String) -> String {
     if s.starts_with("0x") {
         format!(
@@ -204,6 +207,7 @@ fn hex_to_base64(s: &String) -> String {
     }
 }
 
+#[cfg(feature = "json")]
 fn base64_to_hex(s: &String) -> String {
     if s.starts_with("b64:") {
         format!(
@@ -219,6 +223,7 @@ fn base64_to_hex(s: &String) -> String {
     }
 }
 
+#[cfg(feature = "json")]
 fn traverse(value: &Value, bytes_encode_method: &BinaryEncoding) -> Value {
     let converter = match bytes_encode_method {
         BinaryEncoding::Hex => base64_to_hex,

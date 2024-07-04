@@ -108,7 +108,7 @@ cargo build
 If you want to test:
 
 ```
-cargo test
+cargo test --features test
 ```
 
 [cargo]: https://github.com/rust-lang/cargo/
