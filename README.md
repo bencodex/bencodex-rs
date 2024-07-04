@@ -94,21 +94,3 @@ $ echo -n '"123"' | bencodex -d
 $ echo -n 'null' | bencodex -d
 n
 ```
-
-## Building and Testing
-
-You can build and test the code with [cargo] command.
-
-If you want to build:
-
-```
-cargo build
-```
-
-If you want to test:
-
-```
-cargo test --features test
-```
-
-[cargo]: https://github.com/rust-lang/cargo/
